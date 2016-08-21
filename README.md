@@ -13,4 +13,4 @@ V0.7 improvements:
   4. table of means included in the summary
   5. TODO: median -> mean 
   6. TODO: predictors that have 4 levels or fewer will be considered as factors
-  7. TODO: add single level models for the Poisson model (possible all models) to compare
+  7. TODO: add single level models for the Poisson model to compare
