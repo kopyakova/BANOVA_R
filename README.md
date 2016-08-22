@@ -11,6 +11,7 @@ V0.7 improvements:
   2. format change of convergence diag 
   3. table of means and prediction change (exp(mu + sigma^2/2)) for the Poisson model
   4. table of means included in the summary
-  5. TODO: median -> mean 
-  6. TODO: predictors that have 4 levels or fewer will be considered as factors
-  7. TODO: add single level models for the Poisson model to compare
+  5. TODO: unify the format of digits, and names of the table of effect sizes and table of p values 
+  6. TODO: median -> mean 
+  7. TODO: predictors that have 4 levels or fewer will be considered as factors
+  8. TODO: add single level models for the Poisson model to compare
