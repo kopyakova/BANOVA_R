@@ -6,7 +6,7 @@ V0.6 improvements:
   4. print full convergence diag. for the Heidelberg and Welch diagnostic.
   5. Table of means can now print any level of interactions
 
-V0.7 improvements:
+V0.7 improvements (target 08-2016):
   1. exclude numeric variables for predictions 
   2. format change of convergence diag 
   3. table of means and prediction change (exp(mu + sigma^2/2)) for the Poisson model
