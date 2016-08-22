@@ -14,4 +14,4 @@ V0.7 improvements:
   5. TODO: unify the format of digits, and names of the table of effect sizes and table of p values 
   6. TODO: median -> mean 
   7. TODO: predictors that have 4 levels or fewer will be considered as factors
-  8. TODO: add single level models for the Poisson model to compare
+  8. TODO: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
