@@ -14,4 +14,5 @@ V0.7 improvements (target 08-2016):
   5. unify the format of digits, and names of the table of effect sizes and table of p values 
   6. median -> mean 
   7. predictors that have 3 levels or fewer will be automatically considered as factors
-  8. TODO: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
+  
+  1. TODO: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
