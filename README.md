@@ -15,4 +15,4 @@ V0.7 improvements (target 08-2016):
   6. median -> mean 
   7. predictors that have 3 levels or fewer will be automatically considered as factors
   
-  1. TODO: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
+TODO: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
