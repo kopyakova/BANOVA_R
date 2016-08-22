@@ -11,7 +11,7 @@ V0.7 improvements (target 08-2016):
   2. format change of convergence diag 
   3. table of means and prediction change (exp(mu + sigma^2/2)) for the Poisson model
   4. table of means included in the summary
-  5. unify the format of digits, and names of the table of effect sizes and table of p values 
+  5. unify the format of digits, and names of the table of effect sizes and table of p values (round and format)
   6. median -> mean 
   7. predictors that have 3 levels or fewer will be automatically considered as factors
   
