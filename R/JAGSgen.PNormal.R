@@ -22,10 +22,10 @@ function (X, Z, l2_hyper, conv_speedup){
     for (j in 1:num_id)
       monitorl1.parameters<-c(monitorl1.parameters, paste("beta",i,"[",j,"]",sep=""))
   }
-  sModel <- paste(sModel,"#+epsilon[i]
-    #epsilon[i] ~ dnorm(0,tau.eps)", sep = "")
+  #sModel <- paste(sModel,"#+epsilon[i]
+  #  #epsilon[i] ~ dnorm(0,tau.eps)", sep = "")
   sModel <- paste(sModel,"
-  }
+  }",sep="")
   #tau.eps ~ dgamma(1, 1)
   #sigma.eps <- pow(tau.eps, -0.5)",sep="")
   #inits$epsilon <- rnorm(nrow(X))
