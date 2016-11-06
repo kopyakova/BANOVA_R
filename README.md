@@ -6,7 +6,7 @@ V0.6 improvements:
   4. print full convergence diag. for the Heidelberg and Welch diagnostic.
   5. Table of means can now print any level of interactions
 
-V0.7 improvements (target 08-2016):
+V0.7 improvements (08-2016):
   1. exclude numeric variables for predictions 
   2. format change of convergence diag 
   3. table of means and prediction change (exp(mu + sigma^2/2)) for the Poisson model
@@ -15,4 +15,10 @@ V0.7 improvements (target 08-2016):
   6. median -> mean 
   7. predictors that have 3 levels or fewer will be automatically considered as factors
   
-TODO: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
+V0.8 improvements (target 12-2016)
+  1. change the name of 'table of means' to 'table of predictions'
+  2. add floodlight analysis
+  3. add mediation analysis (single mediator)
+  
+  
+Backlog: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
