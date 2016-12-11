@@ -16,9 +16,10 @@ V0.7 improvements (08-2016):
   7. predictors that have 3 levels or fewer will be automatically considered as factors
   
 V0.8 improvements (target 12-2016)
-  1. change the name of 'table of means' to 'table of predictions'
-  2. add floodlight analysis
-  3. add mediation analysis (single mediator, multiple moderators)
+  1. change the name 'table of means' to 'table of predictions'
+  2. column names of the data goalstudy are changed to make more sense
+  3. add floodlight analysis
+  4. add mediation analysis (single mediator, multiple moderators)
   
   
 Backlog: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
