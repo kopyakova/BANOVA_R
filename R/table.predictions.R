@@ -1,4 +1,4 @@
-table.means <-
+table.predictions <-
 function(x){
   if(class(x) == 'BANOVA.Normal' || class(x) == 'BANOVA.T'){
     sol_tables <- print.table.means(x$coef.tables$coeff_table, x$samples_l2_param, colnames(x$dMatrice$X), X_assign = attr(x$dMatrice$X, 'assign'), 
