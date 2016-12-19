@@ -15,7 +15,7 @@ V0.7 improvements (08-2016):
   6. median -> mean 
   7. predictors that have 3 levels or fewer will be automatically considered as factors
   
-V0.8 improvements (target 12-2016)
+V0.8 improvements (12-2016)
   1. change the name 'table of means' to 'table of predictions'
   2. column names of the data goalstudy are changed to make more sense
   3. add floodlight analysis
