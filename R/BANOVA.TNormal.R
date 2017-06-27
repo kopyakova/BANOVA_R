@@ -117,5 +117,5 @@ function(l1_formula = 'NA', l2_formula = 'NA', data, id, l1_hyper, l2_hyper, bur
               coef.tables = coef.tables,
               pvalue.table = pvalue.table, 
               conv = conv,
-              dMatrice = dMatrice, samples_l2_param = samples_l2_param, data = data, mf1 = mf1, mf2 = mf2,JAGSmodel = JAGS.model$sModel))
+              dMatrice = dMatrice, samples_l2_param = samples_l2_param, data = data, mf1 = mf1, mf2 = mf2,JAGSmodel = JAGS.model$sModel, single_level = F, model_name = "BANOVA.T"))
 }

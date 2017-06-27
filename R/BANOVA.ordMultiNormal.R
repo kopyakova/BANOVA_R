@@ -16,7 +16,7 @@ function(l1_formula = 'NA', l2_formula = 'NA', data, id, l2_hyper, burnin, sampl
   if (l2_formula == 'NA'){
     DV_sort <- sort(unique(y))
     n_categories <- length(DV_sort)
-    if (n_categories < 2) stop('The number of categories must be greater than 1!')
+    if (n_categories < 3) stop('The number of categories must be greater than 2!')
     if (DV_sort[1] != 1 || DV_sort[n_categories] != n_categories) stop('Check if response variable follows categorical distribution!') 
     n.cut <- n_categories - 1
     # check each column in the dataframe should have the class 'factor' or 'numeric', no other classes such as 'matrix'...
@@ -143,5 +143,6 @@ function(l1_formula = 'NA', l2_formula = 'NA', data, id, l2_hyper, burnin, sampl
               coef.tables = coef.tables,
               pvalue.table = pvalue.table, 
               conv = conv,
-              dMatrice = dMatrice, samples_l2_param = samples_l2_param, samples_cutp_param = samples_cutp_param, data = data, mf1 = mf1, mf2 = mf2,JAGSmodel = JAGS.model$sModel))
+              dMatrice = dMatrice, samples_l2_param = samples_l2_param, samples_cutp_param = samples_cutp_param, data = data, 
+              mf1 = mf1, mf2 = mf2,JAGSmodel = JAGS.model$sModel, single_level = F, model_name = "BANOVA.ordMutinomial"))
 }

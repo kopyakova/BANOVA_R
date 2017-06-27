@@ -15,46 +15,47 @@ BANOVA.BinNormal <-
     }
     
     if (l2_formula == 'NA'){
-      if (class(num_trials) != 'integer') stop('The number of trials should be integers! Might use as.integer()')
-      # check each column in the dataframe should have the class 'factor' or 'numeric', no other classes such as 'matrix'...
-      for (i in 1:ncol(data)){
-        if(class(data[,i]) != 'factor' && class(data[,i]) != 'numeric' && class(data[,i]) != 'integer') stop("data class must be 'factor', 'numeric' or 'integer'")
-        # checking numerical predictors, converted to categorical variables if the number of levels is <= 3
-        if ((class(data[,i]) == 'numeric' | class(data[,i]) == 'integer') & length(unique(data[,i])) <= 3){
-          data[,i] <- as.factor(data[,i])
-          warning("Variables(levels <= 3) have been converted to factors")
-        }
-      }
-      n <- nrow(data)
-      uni_id <- unique(id)
-      num_id <- length(uni_id)
-      new_id <- rep(0, length(id)) # store the new id from 1,2,3,...
-      for (i in 1:length(id))
-        new_id[i] <- which(uni_id == id[i])
-      id <- new_id
-      dMatrice <- design.matrix(l1_formula, l2_formula, data = data, id = id)
-      N <- num_trials
-      if (length(N) == 1) N <- rep(num_trials, n) 
-      if (length(N) != n) stop('The length of num_trials must be equal to the number of observations!')
-      # handle missing values
-      if (sum(y > num_trials, na.rm = T) > 0) stop('The number of trials is less than observations!')
-      JAGS.model <- JAGSgen.binNormal(dMatrice$X, dMatrice$Z, l2_hyper, conv_speedup)
-      JAGS.data <- dump.format(list(n = n, y = y, X = dMatrice$X, N = N))
-      result <- run.jags (model = JAGS.model$sModel, data = JAGS.data, inits = JAGS.model$inits, n.chains = 1,
-                          monitor = c(JAGS.model$monitorl1.parameters, JAGS.model$monitorl2.parameters), 
-                          burnin = burnin, sample = sample, thin = thin, adapt = adapt, jags = jags, summarise = FALSE, 
-                          method="rjags")
-      samples <- result$mcmc[[1]]
-      # find the correct samples, in case the order of monitors is shuffled by JAGS
-      n_p_l1 <- length(JAGS.model$monitorl1.parameters)
-      index_l1_param<- array(0,dim = c(n_p_l1,1))
-      for (i in 1:n_p_l1)
-        index_l1_param[i] <- which(colnames(result$mcmc[[1]]) == JAGS.model$monitorl1.parameters[i])
-      if (length(index_l1_param) > 1)
-        samples_l1_param <- result$mcmc[[1]][,index_l1_param]
-      else
-        samples_l1_param <- matrix(result$mcmc[[1]][,index_l1_param], ncol = 1)
-      colnames(samples_l1_param) <- colnames(result$mcmc[[1]])[index_l1_param]
+      stop("The level 2 formula is not specified, please check BANOVA.run for single level models.")
+      # if (class(num_trials) != 'integer') stop('The number of trials should be integers! Might use as.integer()')
+      # # check each column in the dataframe should have the class 'factor' or 'numeric', no other classes such as 'matrix'...
+      # for (i in 1:ncol(data)){
+      #   if(class(data[,i]) != 'factor' && class(data[,i]) != 'numeric' && class(data[,i]) != 'integer') stop("data class must be 'factor', 'numeric' or 'integer'")
+      #   # checking numerical predictors, converted to categorical variables if the number of levels is <= 3
+      #   if ((class(data[,i]) == 'numeric' | class(data[,i]) == 'integer') & length(unique(data[,i])) <= 3){
+      #     data[,i] <- as.factor(data[,i])
+      #     warning("Variables(levels <= 3) have been converted to factors")
+      #   }
+      # }
+      # n <- nrow(data)
+      # uni_id <- unique(id)
+      # num_id <- length(uni_id)
+      # new_id <- rep(0, length(id)) # store the new id from 1,2,3,...
+      # for (i in 1:length(id))
+      #   new_id[i] <- which(uni_id == id[i])
+      # id <- new_id
+      # dMatrice <- design.matrix(l1_formula, l2_formula, data = data, id = id)
+      # N <- num_trials
+      # if (length(N) == 1) N <- rep(num_trials, n) 
+      # if (length(N) != n) stop('The length of num_trials must be equal to the number of observations!')
+      # # handle missing values
+      # if (sum(y > num_trials, na.rm = T) > 0) stop('The number of trials is less than observations!')
+      # JAGS.model <- JAGSgen.binNormal(dMatrice$X, dMatrice$Z, l2_hyper, conv_speedup)
+      # JAGS.data <- dump.format(list(n = n, y = y, X = dMatrice$X, N = N))
+      # result <- run.jags (model = JAGS.model$sModel, data = JAGS.data, inits = JAGS.model$inits, n.chains = 1,
+      #                     monitor = c(JAGS.model$monitorl1.parameters, JAGS.model$monitorl2.parameters), 
+      #                     burnin = burnin, sample = sample, thin = thin, adapt = adapt, jags = jags, summarise = FALSE, 
+      #                     method="rjags")
+      # samples <- result$mcmc[[1]]
+      # # find the correct samples, in case the order of monitors is shuffled by JAGS
+      # n_p_l1 <- length(JAGS.model$monitorl1.parameters)
+      # index_l1_param<- array(0,dim = c(n_p_l1,1))
+      # for (i in 1:n_p_l1)
+      #   index_l1_param[i] <- which(colnames(result$mcmc[[1]]) == JAGS.model$monitorl1.parameters[i])
+      # if (length(index_l1_param) > 1)
+      #   samples_l1_param <- result$mcmc[[1]][,index_l1_param]
+      # else
+      #   samples_l1_param <- matrix(result$mcmc[[1]][,index_l1_param], ncol = 1)
+      # colnames(samples_l1_param) <- colnames(result$mcmc[[1]])[index_l1_param]
       
     }else{
       mf2 <- model.frame(formula = l2_formula, data = data)
@@ -128,5 +129,6 @@ BANOVA.BinNormal <-
                 coef.tables = coef.tables,
                 pvalue.table = pvalue.table, 
                 conv = conv,
-                dMatrice = dMatrice, samples_l2_param = samples_l2_param, data = data, mf1 = mf1, mf2 = mf2, JAGSmodel = JAGS.model$sModel))
+                dMatrice = dMatrice, samples_l2_param = samples_l2_param, data = data, 
+                mf1 = mf1, mf2 = mf2, JAGSmodel = JAGS.model$sModel, single_level = F, model_name = "BANOVA.Binomial"))
   }

@@ -32,7 +32,7 @@ if (is.null(Z)){
   }",sep="")
   for (j in 1:num_l1_v){
     sModel <- paste(sModel,"
-  beta",j,"~dnorm(0,",l1_hyper[3],")",sep="")
+  beta",j,"~dnorm(0,",l2_hyper[3],")",sep="")
     s<-paste("inits$","beta",j,"<-rnorm(1)",sep="")
     eval(parse(text=s))
   }
@@ -49,7 +49,6 @@ if (is.null(Z)){
   monitor.cutp <- character()
   for (i in 2:n.cut)
     monitor.cutp <-c(monitor.cutp, paste('cutp[',i,']',sep=""))
-}
 }else{
   num_l1_v <- ncol(X)
   num_l2_v <- ncol(Z)
