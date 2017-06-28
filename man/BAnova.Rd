@@ -15,7 +15,7 @@ BAnova(x)
 \details{
 Measures of effect size in regression are measures of the degree of association between an effect (e.g., a main effect, an interaction, a linear contrast) and the dependent variable. They can be considered as the correlation between a categorical factor(effect) and the dependent variable. They are usually interpreted as the proportion of variance in the dependent variable that is attributable to each effect. In the package, partial Eta squared is calculated and displayed. It is defined as follows, \cr
 
-\eqn{\eta^2= \frac{(SS_effect)}{(SS_effect + SS_error )}} \cr
+\eqn{\eta^2= \frac{(SS_{effect})}{(SS_{effect} + SS_{error})}} \cr
 
 Where:
 SS_effect= the sums of squares for the effect of interest \cr

@@ -61,6 +61,7 @@ Level 1 model: \cr
   \item{pvalue.table}{table of p-values \code{\link{table.pvalues}}}
   \item{dMatrice}{design matrices at level 1 and level 2}
   \item{samples_l2_param}{posterior samples of level 2 parameters}
+  \item{samples_l2_sigma_param}{posterior samples of level 2 standard deviations}
   \item{data}{original data.frame}
   \item{mf1}{model.frame of level 1}
   \item{mf2}{model.frame of level 2}

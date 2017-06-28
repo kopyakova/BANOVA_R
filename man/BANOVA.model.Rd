@@ -5,7 +5,7 @@
 \code{BANOVA.model} extracts BANOVA models from the package.
 }
 \usage{
-BANOVA.model(model_name, single_level)
+BANOVA.model(model_name, single_level = F)
 }
 \arguments{
   \item{model_name}{a character string in c('Normal', 'T', 'Bernoulli', 'Binomial', 'Poisson', 'ordMultinomial', 'Multinomial')}

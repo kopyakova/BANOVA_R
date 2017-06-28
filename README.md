@@ -21,5 +21,11 @@ V0.8 improvements (12-2016)
   3. add floodlight analysis
   4. add mediation analysis (single mediator, multiple moderators)
   
+v0.9 improvements (06-2017)
+  1. BANOVA uses Stan!
+  2. all two-level models are moved into a simple function call: BANOVA.run 
+  3. old two-level models (e.g. BANOVA.Normal, BANOVA.Bin, etc.) are still kept, but will be removed gradually
+  4. single level models are included
   
-Backlog: add single level models for the Poisson model for comparison when the number of subjects is equal to the number of observations
+  
+Backlog: check if a model has an identification issue, e.g. the number of observations of each subject is too small.

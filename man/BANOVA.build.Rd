@@ -12,7 +12,7 @@ BANOVA.build(BANOVA_model)
 }
 
 \value{
-  \code{BANOVA.build} returns an object of class \code{"BANOVA.model"}. The returned object is a list containing:
+  \code{BANOVA.build} returns an object of class \code{"BANOVA.build"}. The returned object is a list containing:
   
   \item{stanmodel}{the compiled Stan model}
   \item{model_name}{the model name}
