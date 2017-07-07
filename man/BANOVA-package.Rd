@@ -12,8 +12,8 @@ This package includes several hierarchical Bayes Analysis of Variance models. Th
 \tabular{ll}{
 Package: \tab BANOVA\cr
 Type: \tab Package\cr
-Version: \tab 0.9\cr
-Date: \tab 2017-06-25\cr
+Version: \tab 0.9.1\cr
+Date: \tab 2017-07-07\cr
 License: \tab GPL (>= 2)\cr
 }
 Model: \cr
