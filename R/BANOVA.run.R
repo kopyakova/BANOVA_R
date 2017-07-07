@@ -467,19 +467,21 @@ get_BANOVA_stan_model <- function(model, single_level) {
   if (single_level)
     name <- paste('single', 'BANOVA.RData', sep = '_')
   else
-    name <- paste('BANOVA.RData', sep = '_')
+    name <- 'BANOVA.RData'
   stanmodel <- tryCatch({
     model_file <- system.file('libs', Sys.getenv('R_ARCH'), name,
                           package = 'BANOVA',
                           mustWork = TRUE)
     load(model_file)
-    obj <- paste(model, 'Normal_stanmodel', sep = '_')
+    if(single_level)
+      obj <- paste(model, 'Normal_stanmodel_1', sep = '_')
+    else
+      obj <- paste(model, 'Normal_stanmodel', sep = '_')
     stanm <- eval(parse(text = obj))
     stanm
   }, error = function(cond) {
     compile_BANOVA_stan_model(model, single_level)
   })
-  return(stanmodel)
 }
 
 # Compile BANOVA stan model

@@ -12,7 +12,7 @@ method that is customized for MCMC output.
   \item{x}{an object of class \code{"BANOVA"}}
 
   \item{...}{Further arguments to be passed to 
-\code{\link[bayesplot:mcmc_pairs]{mcmc_pairs}}}
+\code{\link[rstan:pairs.stanfit]{pairs.stanfit}}}
 }
 
 \details{

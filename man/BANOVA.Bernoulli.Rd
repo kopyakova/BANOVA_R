@@ -73,12 +73,15 @@ Level 1 model: \cr
 \examples{
 
 if(0){
-# use the data in bernlogtime
 data(bernlogtime)
 # model with the dependent variable : response
 res <- BANOVA.Bernoulli(response~typical, ~blur + color, bernlogtime,
 bernlogtime$subject, burnin = 1000, sample = 1000, thin = 1)
 summary(res)
+# or use BANOVA.run
+res0 <- BANOVA.run(response~typical, ~blur + color, data = bernlogtime, 
+model_name = 'Bernoulli',id = bernlogtime$subject, iter = 100, thin = 1, chains = 2)
+summary(res0)
 # table.predictions(res)
 }
 

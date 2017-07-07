@@ -34,4 +34,6 @@ coefficents table is printed twice!
 
 15. save compiling time: option 1: follow the methods of prophet, install.libs.R, and zzz.R; option 2: follow the brms package, remove the compiling warning message, but still compiling
 
-15. fix all cran check issuew
+16. fix all cran check issues
+
+17. ad BANOVA.run to all functions man files, retest ordMultinomial

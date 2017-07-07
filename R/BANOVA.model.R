@@ -13,9 +13,9 @@ BANOVA.model <- function (model_name,
   if(model_name %in% c('Normal', 'Poisson', 'T', 'Bernoulli', 
                        'Binomial', 'ordMultinomial', 'Multinomial')){
     if(single_level){
-        name <- paste("single_",model_name, ".stan", sep = "")
+        name <- paste("stan/single_",model_name, ".stan", sep = "")
     }else{
-        name <- paste(model_name, "Normal.stan", sep = "_")
+        name <- paste("stan/", model_name, "_Normal.stan", sep = "")
     }
     file_src <- system.file(name, package = 'BANOVA', mustWork = TRUE)
     #file_src <- paste("BANOVA_v9/BANOVA_R/inst/stan/",name,sep = "")

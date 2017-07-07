@@ -144,5 +144,5 @@ function(l1_formula = 'NA', l2_formula = 'NA', data, id, l2_hyper, burnin, sampl
               pvalue.table = pvalue.table, 
               conv = conv,
               dMatrice = dMatrice, samples_l2_param = samples_l2_param, samples_cutp_param = samples_cutp_param, data = data, 
-              mf1 = mf1, mf2 = mf2,JAGSmodel = JAGS.model$sModel, single_level = F, model_name = "BANOVA.ordMutinomial"))
+              mf1 = mf1, mf2 = mf2,JAGSmodel = JAGS.model$sModel, single_level = F, model_name = "BANOVA.ordMultinomial"))
 }

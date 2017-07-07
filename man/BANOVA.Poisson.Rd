@@ -84,6 +84,11 @@ goalstudy$bid <- as.integer(goalstudy$bid + 0.5)
 res2<-BANOVA.Poisson(bid~1, ~progress*prodvar,  goalstudy, goalstudy$id, 
 burnin = 1000, sample = 1000, thin = 1)
 summary(res2)
+
+# or use the BANOVA.run based on Stan
+res3 <- BANOVA.run(bid~1, ~progress*prodvar, data = goalstudy, 
+model_name = 'Poisson', id = goalstudy$id, iter = 100, thin = 1, chains = 2)
+
 }
 }
 

@@ -5,7 +5,7 @@
 \alias{summary.BANOVA}
 \title{Estimation of BANOVA models}
 \description{
-\code{BANOVA.run} implements Hierarchical Bayesian ANOVA models
+\code{BANOVA.run} implements Hierarchical Bayesian ANOVA models using Stan
 }
 \usage{
 BANOVA.run(l1_formula = "NA", l2_formula = "NA", fit = NULL, model_name = 'NA', 
@@ -20,7 +20,7 @@ num_trials = 0, ...)
   \item{l1_formula}{formula for level 1 e.g. 'Y~X1+X2'}
 
   \item{l2_formula}{formula for level 2 e.g. '~Z1+Z2',
-  response variable must not be included}
+  response variable must not be included. If NULL, the single level model is used}
 
   \item{fit}{a fitted BANOVA models, an object of class \code{"BANOVA.build"}, default NULL which needs compilation}
   
@@ -49,7 +49,7 @@ num_trials = 0, ...)
   data frame. It must have the same format with the original data (the same column number)}
   \item{Xsamples}{a list of sample data frames(each corresponds to the choice set of each observation) that includes all covariates and factors, for the Multinomial model only, default NULL}
   \item{Zsamples}{a data frame(long format) that includes all level 2 covariates and factors, for the Multinomial model only, default NULL}
-  \item{\dots}{additional arguments, for \code{BANOVA.run}, it can include standard stan arguments, e.g. warmup, thin, chains, etc., see \link[rstan]{sampling} for more details, for other functions, ignored currently}
+  \item{\dots}{additional arguments, for \code{BANOVA.run}, it can include standard Stan arguments, e.g. warmup, thin, chains, etc., see \link[rstan]{sampling} for more details, for other functions, ignored currently}
 }
 
 \value{
@@ -87,7 +87,7 @@ res_2 <- BANOVA.run(attitude~1, ~selfbrand*conspic,
 fit = banova_model, data = ipadstudy, id = ipadstudy$id, iter = 1000, 
 thin = 1, chains = 2)
 
-# or the function can be directly called without specifying the \code{fit} argument
+# or call the function directly without specifying the fit argument
 # but it needs compilation
 res_1 <- BANOVA.run(attitude~1, ~owner + age + gender + selfbrand*conspic,
 model_name = 'Normal', data = ipadstudy, id = ipadstudy$id, iter = 1000, 
