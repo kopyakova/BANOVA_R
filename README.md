@@ -57,7 +57,7 @@ coefficents table is printed twice!
 
 *11. multinomial case, factors are the same across all choices, means different levels of the factor has the same probability estimation. will be cancelled in the final prob/sum
 
-*12. add parameter:single_level to old BANOVA.* models, so that summary/table.predictions can work
+*12. add parameter:single_level to old BANOVA.~ models, so that summary/table.predictions can work
 
 13. add loglikehood to compare various models including single level vs two level models
 
