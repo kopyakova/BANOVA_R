@@ -67,7 +67,12 @@ coefficents table is printed twice!
 
 *16. fix all cran check issues
 
-*17. ad BANOVA.run to all functions man files, retest ordMultinomial
+*17. add BANOVA.run to all functions in  man files, retest ordMultinomial
+
+===========================
+v0.9.1 improvements:
+  1. Add single level models for BANOVA.Normal and BANOVA.T
+  2. remove unnecessary files (TODO) for cran publication
 
  
 Backlog: 
