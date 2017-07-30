@@ -6,7 +6,7 @@ function(l1_formula = 'NA', l2_formula = 'NA', dataX, dataZ, y, id, l2_hyper, bu
   # check y, if it is integers
   if (class(y) != 'integer'){
     warning("The response variable must be integers (data class also must be 'integer')..")
-    y <- as.integer(y)
+    y <- as.integer(as.character(y))
     warning("The response variable has been converted to integers..")
   }
   DV_sort <- sort(unique(y))

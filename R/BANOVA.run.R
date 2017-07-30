@@ -45,7 +45,7 @@ BANOVA.run <- function (l1_formula = 'NA',
     }else if (model_name %in% c('Poisson', 'Binomial', 'Bernoulli', 'Multinomial', 'ordMultinomial')){
       if (class(y) != 'integer'){
         warning("The response variable must be integers (data class also must be 'integer')..")
-        y <- as.integer(y)
+        y <- as.integer(as.character(y))
         warning("The response variable has been converted to integers..")
       }
       if (model_name == 'ordMultinomial'){
