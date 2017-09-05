@@ -1,3 +1,9 @@
+BANOVA v0.9.1 (Release date: 2017-08-26)
+==============
+* single level models are supported for old models except Binomial and Bernoulli
+* fix the bug that the interaction between the mediator and moderators is missing in the mediation output
+* The names in the table of indirect effets are reordered (alphabetically)
+
 BANOVA v0.9 (Release date: 2017-06-27)
 ==============
 * BANOVA uses Stan!

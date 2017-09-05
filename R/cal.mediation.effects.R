@@ -195,6 +195,7 @@ function (est_samples, row_name, col_name){
     table_m[temp, ncol(row_name) + ncol(col_name) + 2] <- pmin(round(quantile_025[k1,], digits = 4), round(quantile_975[k1,], digits = 4))
     table_m[temp, ncol(row_name) + ncol(col_name) + 3] <- pmax(round(quantile_025[k1,], digits = 4), round(quantile_975[k1,], digits = 4))
   }
+  # reorder table_m column names, sort values column by column, keep the order of table_m_index
   table_mediator <- list(table_m = table_m, index_name = table_m[, 1: (ncol(row_name) + ncol(col_name)), drop = F], index = table_m_index, samples = est_samples)
   return(table_mediator )
   

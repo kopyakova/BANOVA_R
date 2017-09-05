@@ -2,7 +2,8 @@ BANOVA.MultiNormal <-
 function(l1_formula = 'NA', l2_formula = 'NA', dataX, dataZ, y, id, l2_hyper, burnin, sample, thin, adapt, conv_speedup, jags){
   cat('Model initializing...\n')
   # TODO one level model
-  
+  if (l2_formula == 'NA')
+    stop("The level 2 formula is not specified, please check BANOVA.run for single level models.")
   # check y, if it is integers
   if (class(y) != 'integer'){
     warning("The response variable must be integers (data class also must be 'integer')..")
