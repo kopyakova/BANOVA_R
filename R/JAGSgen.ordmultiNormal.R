@@ -1,5 +1,63 @@
 JAGSgen.ordmultiNormal <-
-function (X, Z, n.cut, l2_hyper, conv_speedup){
+function (X, Z, n.cut, l1_hyper = NULL, l2_hyper = NULL, conv_speedup){
+if (is.null(Z)){
+  num_l1_v <- ncol(X)
+  inits <- new.env() # store initial values for BUGS model
+  monitorl1.parameters <- character()  # store monitors for level 1 parameters, which will be used in the computation of sum of squares
+  monitorl2.parameters <- NULL # store monitors for level 2 parameters
+  # check l1_hyper
+  if(is.null(l1_hyper)){
+    l1_hyper = c(0.0001, 10)
+  }else{
+    if (length(l1_hyper) != 2){
+      stop("l1_hyper must be of length 2 for single level models!")
+    }
+  }
+  ### generate the code for BUGS model
+  sModel <- paste("model{", sep="")
+  ### level 1 likelihood 
+  sModel <- paste(sModel,"
+  for (i in 1:n){
+    y[i] ~ dcat(P[i,])
+    P[i,1] <- 1 - Q[i,1]
+    for (i.cut in 2: n.cut) {
+      P[i,i.cut] <- Q[i,i.cut-1] - Q[i,i.cut]	  
+    }
+    P[i,n.cut+1] <- Q[i,n.cut]
+    for (i.cut in 1:n.cut){
+      logit(Q[i,i.cut]) <- z[i,i.cut]","
+      z[i,i.cut] <-")
+  for (i in 1:num_l1_v){
+    if (i != num_l1_v)
+      sModel <- paste(sModel,"beta",i,"*","X[i,",i,"]+",sep="")
+    else
+      sModel <- paste(sModel,"beta",i,"*","X[i,",i,"]",sep="")
+    monitorl1.parameters<-c(monitorl1.parameters, paste("beta",i,sep=""))
+  }
+  sModel <- paste(sModel,"-cutp[i.cut]*(1-equals(i.cut,1))
+    }",sep="")
+  sModel <- paste(sModel,"
+  }",sep="")
+  for (j in 1:num_l1_v){
+    sModel <- paste(sModel,"
+  beta",j,"~dnorm(0,",l1_hyper[1],")",sep="")
+    s<-paste("inits$","beta",j,"<-rnorm(1)",sep="")
+    eval(parse(text=s))
+  }
+  sModel <- paste(sModel,"
+  for (i.cut in 1: n.cut) {
+    cutp0[i.cut] ~ dnorm(0,tau.cut)
+  }
+  tau.cut ~ dunif(0,",l1_hyper[2],")
+  cutp[1:n.cut] <- sort(cutp0)",sep="")
+  
+  sModel<- paste(sModel,"
+}")
+  inits$cutp0=c(0,sort(runif(n.cut-1,0,6)))
+  monitor.cutp <- character()
+  for (i in 2:n.cut)
+    monitor.cutp <-c(monitor.cutp, paste('cutp[',i,']',sep=""))
+}else{
   num_l1_v <- ncol(X)
   num_l2_v <- ncol(Z)
   num_id <- nrow(Z)
@@ -110,6 +168,7 @@ function (X, Z, n.cut, l2_hyper, conv_speedup){
   monitor.cutp <- character()
   for (i in 2:n.cut)
     monitor.cutp <-c(monitor.cutp, paste('cutp[',i,']',sep=""))
+}
   sol.inits <- dump.format(as.list(inits))
   results <- list(inits = sol.inits, monitorl1.parameters = monitorl1.parameters, 
                   monitorl2.parameters = monitorl2.parameters, monitor.cutp = monitor.cutp, sModel = sModel)

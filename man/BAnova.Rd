@@ -2,7 +2,7 @@
 \alias{BAnova}
 \title{Function to print the table of effect sizes}
 \description{
-The analysis of variance is performed at level 2 equation of the Bayesian ANOVA see \code{\link{BANOVA-package}}. This makes it possible to capture the effects of level-2 variables on the heterogeneity distribution of subjects, and compute sums of squares and effect sizes.
+The analysis of variance is performed at level 1 (for the single level model) and level 2 equation of the Bayesian ANOVA see \code{\link{BANOVA-package}}. This makes it possible to capture the effects of level-1 or level-2 variables on the heterogeneity distribution of subjects, and compute sums of squares and effect sizes.
 
 }
 \usage{
@@ -15,7 +15,7 @@ BAnova(x)
 \details{
 Measures of effect size in regression are measures of the degree of association between an effect (e.g., a main effect, an interaction, a linear contrast) and the dependent variable. They can be considered as the correlation between a categorical factor(effect) and the dependent variable. They are usually interpreted as the proportion of variance in the dependent variable that is attributable to each effect. In the package, partial Eta squared is calculated and displayed. It is defined as follows, \cr
 
-\eqn{\eta^2= \frac{(SS_effect)}{(SS_effect + SS_error )}} \cr
+\eqn{\eta^2= \frac{(SS_{effect})}{(SS_{effect} + SS_{error})}} \cr
 
 Where:
 SS_effect= the sums of squares for the effect of interest \cr
@@ -49,6 +49,13 @@ res1 <- BANOVA.Normal(bid~1, ~progress*prodvar,  goalstudy, goalstudy$id,
 burnin = 1000, sample = 1000, thin = 2) 
 
 BAnova(res1)
+
+if(0){
+# or use BANOVA.run based on Stan
+res2 <- BANOVA.run(bid~1, ~progress*prodvar,  model_name = 'Normal', 
+data = goalstudy, id = goalstudy$id, iter = 1000, chains = 2)
+BAnova(res2)
+}
 
 }
 

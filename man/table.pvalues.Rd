@@ -2,7 +2,7 @@
 \alias{table.pvalues}
 \title{Function to print the table of p-values}
 \description{
-Computes the Baysian p-values for the test concerning the level 2 parameters: \cr
+Computes the Baysian p-values for the test concerning all coefficients/parameters: \cr
 
 For \eqn{p = 1,...,P} \cr
 \eqn{H_0:\theta_{j,k}^{p,q}=0} \cr
@@ -35,7 +35,12 @@ It borrows the idea of Sheffe F-test for multiple testing: the F-stat for testin
 data(goalstudy)
 
 res1 <- BANOVA.Normal(bid~1, ~progress*prodvar,  goalstudy, goalstudy$id, 
-burnin = 1000, sample = 1000, thin = 2) 
+burnin = 1000, sample = 1000, thin = 2)
+if(0){
+# or use BANOVA.run
+res1 <- BANOVA.run(bid~1, ~progress*prodvar, model_name = "Normal", 
+data = goalstudy, id = goalstudy$id, iter = 1000, thin = 1, chains = 2) 
+}
 
 table.pvalues(res1)
 

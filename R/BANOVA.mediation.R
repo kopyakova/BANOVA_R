@@ -3,8 +3,8 @@
 ###
 BANOVA.mediation <-
   function(sol_1, sol_2, xvar, mediator){
-    if(!(class(sol_1) %in% c('BANOVA.Normal', 'BANOVA.T', 'BANOVA.Poisson', 'BANOVA.Bern', 'BANOVA.Bin', 'BANOVA.ordMultinomial', 'BANOVA.Multinomial'))) stop('Model is not recognized')
-    if(class(sol_2) != 'BANOVA.Normal') stop('The mediator must follow the Normal distribution, use BANOVA.Normal instead.')
+    if(!(class(sol_1) %in% c('BANOVA', 'BANOVA.Normal', 'BANOVA.T', 'BANOVA.Poisson', 'BANOVA.Bern', 'BANOVA.Bin', 'BANOVA.ordMultinomial', 'BANOVA.Multinomial'))) stop('Model is not recognized')
+    if(sol_2$model_name != 'BANOVA.Normal') stop('The mediator must follow the Normal distribution, use BANOVA Normal models instead.')
     
     X_names = colnames(sol_1$dMatrice$X)
     Z_names = colnames(sol_1$dMatrice$Z)
@@ -12,7 +12,10 @@ BANOVA.mediation <-
     Z_assign = attr(sol_1$dMatrice$Z, 'assign')
     num_l1 <- length(X_assign)
     num_l2 <- length(Z_assign)
-    samples_l2_param <- sol_1$samples_l2_param
+    if (sol_1$single_level)
+      samples_l2_param <- sol_1$samples_l1_param
+    else
+      samples_l2_param <- sol_1$samples_l2_param
     n_sample <- nrow(samples_l2_param)
     est_matrix <- array(0 , dim = c(num_l1, num_l2, n_sample), dimnames = list(X_names, Z_names, NULL))
     for (i in 1:num_l1){
@@ -27,7 +30,10 @@ BANOVA.mediation <-
     Z_assign_m = attr(sol_2$dMatrice$Z, 'assign')
     num_l1_m <- length(X_assign_m)
     num_l2_m <- length(Z_assign_m)
-    samples_l2_param_m <- sol_2$samples_l2_param
+    if (sol_2$single_level)
+      samples_l2_param_m <- sol_2$samples_l1_param
+    else
+      samples_l2_param_m <- sol_2$samples_l2_param
     n_sample_m <- nrow(samples_l2_param_m)
     est_matrix_m <- array(0 , dim = c(num_l1_m, num_l2_m, n_sample_m), dimnames = list(X_names_m, Z_names_m, NULL))
     for (i in 1:num_l1_m){
@@ -176,14 +182,20 @@ combine.effects <- function (mediator_l1_effects, mediator_xvar_effects){
   temp_table_index <- merge(table_2_names_index.df, table_1_names_index.df, by = intersect(colnames(table_1_names), colnames(table_2_names)), all.x = T)
   table_1_est_sample_index <- temp_table_index[,colnames(temp_1)]
   table_2_est_sample_index <- temp_table_index[,colnames(temp_2)]
-  result_table <- array('1', dim = c(nrow(temp_table_index), ncol(temp_table_index) - 4 + 3), dimnames = list(rep("",nrow(temp_table_index)), c(union(colnames(table_1_names), colnames(table_2_names)), 'mean', '2.5%', '97.5%')))
-  for (nm in union(colnames(table_1_names), colnames(table_2_names)))
-  result_table[, nm] <- as.character(temp_table_index[[nm]])
+  # standardize the names of this table, so that the output table looks consistant, direct vs indirect, e.g. sort the column names
+  union_names <- union(colnames(table_1_names), colnames(table_2_names))
+  union_names <- union_names[order(union_names)]
+  result_table <- array('1', dim = c(nrow(temp_table_index), ncol(temp_table_index) - 4 + 3), dimnames = list(rep("",nrow(temp_table_index)), c(union_names, 'mean', '2.5%', '97.5%')))
+  for (nm in union_names)
+    result_table[, nm] <- as.character(temp_table_index[[nm]])
   for (ind in 1:nrow(table_1_est_sample_index)){
     common_n_sample <- min(dim(mediator_l1_effects$samples)[3], dim(mediator_xvar_effects$samples)[3])
     m_samples <- mediator_l1_effects$samples[table_1_est_sample_index[ind,1], table_1_est_sample_index[ind,2], 1:common_n_sample] * mediator_xvar_effects$samples[table_2_est_sample_index[ind,1], table_2_est_sample_index[ind,2], 1:common_n_sample]
     result_table[ind,'mean'] <- round(mean(m_samples), 4)
     result_table[ind,c('2.5%', '97.5%')] <- round(quantile(m_samples, probs = c(0.025, 0.975)),4)
   }
+  #sort values column by column
+  result_table <- data.frame(result_table, check.names=FALSE)
+  result_table <- result_table[do.call(order, result_table), ]
   return(result_table)
 }
