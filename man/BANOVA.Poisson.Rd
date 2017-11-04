@@ -69,7 +69,7 @@ Level 1 model: \cr
 }
 
 \examples{
-if(0){
+\donttest{
 # use the bpndata dataset
 data(bpndata)
 # within-subjects model using the dependent variable : PIC_FIX 

@@ -74,9 +74,8 @@ Level 1 model: \cr
 }
 
 \examples{
-
-if(0){
 data(colorad)
+\donttest{
 # mean center Blur for effect coding
 colorad$blur <- colorad$blur - mean(colorad$blur)
 res <- BANOVA.Binomial(y~typic, ~color*blur, colorad, colorad$id, as.integer(16), 
@@ -86,7 +85,7 @@ summary(res)
 res0 <- BANOVA.run(y~typic, ~color*blur, data = colorad, model_name = 'Binomial',
 id = colorad$id, num_trials = as.integer(16), iter = 100, thin = 1, chains = 2)
 summary(res0)
-# table.predictions(res)
+table.predictions(res)
 # only the in-model variables data will be used, the others will be ignored
 predict(res0, c(1, 0, 8, 2, 1, 0.03400759))
 }

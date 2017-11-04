@@ -54,7 +54,7 @@ Wedel, M. and Dong, C. (2016) \emph{BANOVA: Bayesian Analysis of Variance for Co
 
 \examples{
 data(condstudy)
-if(0){
+\donttest{
 # use BANOVA.run based on Stan
 model <- BANOVA.model('Normal')
 stanmodel <- BANOVA.build(model)

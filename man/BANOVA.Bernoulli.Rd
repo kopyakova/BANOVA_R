@@ -71,9 +71,8 @@ Level 1 model: \cr
 }
 
 \examples{
-
-if(0){
 data(bernlogtime)
+\donttest{
 # model with the dependent variable : response
 res <- BANOVA.Bernoulli(response~typical, ~blur + color, bernlogtime,
 bernlogtime$subject, burnin = 5000, sample = 2000, thin = 10)
@@ -82,7 +81,6 @@ summary(res)
 res0 <- BANOVA.run(response~typical, ~blur + color, data = bernlogtime, 
 model_name = 'Bernoulli',id = bernlogtime$subject, iter = 100, thin = 1, chains = 2)
 summary(res0)
-# table.predictions(res)
 }
 
 }

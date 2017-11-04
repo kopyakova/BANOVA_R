@@ -21,7 +21,7 @@ BANOVA.build(BANOVA_model)
 }
 
 \examples{
-if(0){
+\donttest{
 model <- BANOVA.model('Poisson', single_level = FALSE) 
 Poisson_model <- BANOVA.build(model)
 # visualize the model

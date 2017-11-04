@@ -75,7 +75,7 @@ num_trials = 0, ...)
 \examples{
 # Use the ipadstudy data set
 data(ipadstudy)
-if(0){
+\donttest{
 # build the BANOVA model first so that it can be reused
 model <- BANOVA.model('Normal', single_level = FALSE)
 banova_model <- BANOVA.build(model)

@@ -75,7 +75,6 @@ Level 1 model: \cr
 \examples{
 # Use the ipadstudy data set
 data(ipadstudy)
-
 # mean center covariates
 ipadstudy$age <- ipadstudy$age - mean(ipadstudy$age) 
 ipadstudy$owner <- ipadstudy$owner - mean(ipadstudy$owner)
@@ -83,9 +82,12 @@ ipadstudy$gender <- ipadstudy$gender - mean(ipadstudy$gender)
 res <- BANOVA.Normal(attitude~1, ~owner + age + gender + selfbrand*conspic, ipadstudy,
 ipadstudy$id, burnin = 1000, sample = 1000, thin = 1 )
 summary(res)
+\donttest{
 # or use BANOVA.run based on Stan
-#res <- BANOVA.run(attitude~1, ~owner + age + gender + selfbrand*conspic, data = ipadstudy, 
-#model_name = 'Normal', id = ipadstudy$id, iter = 100, thin = 1, chains = 2)
+res <- BANOVA.run(attitude~1, ~owner + age + gender + selfbrand*conspic, 
+data = ipadstudy, model_name = 'Normal', id = ipadstudy$id, 
+iter = 100, thin = 1, chains = 2)
+}
 }
 
 
