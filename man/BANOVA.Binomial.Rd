@@ -41,7 +41,7 @@ BANOVA.Binomial(l1_formula = "NA", l2_formula = "NA", data,
   
   \item{conv_speedup}{whether to speedup convergence, default F}
   
-  \item{jags}{the system call or path for activating JAGS. Default calls findjags() to attempt to locate JAGS on your system}
+  \item{jags}{the system call or path for activating 'JAGS'. Default calls findjags() to attempt to locate 'JAGS' on your system}
   
   \item{object}{object of class \code{BANOVA.Bin} (returned by \code{BANOVA.Bin})}
 
@@ -70,7 +70,7 @@ Level 1 model: \cr
   \item{data}{original data.frame}
   \item{mf1}{model.frame of level 1}
   \item{mf2}{model.frame of level 2}
-  \item{JAGSmodel}{JAGS model}
+  \item{JAGSmodel}{'JAGS' model}
 }
 
 \examples{

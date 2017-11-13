@@ -40,7 +40,7 @@ BANOVA.Normal(l1_formula = "NA", l2_formula = "NA", data,
   
   \item{conv_speedup}{whether to speedup convergence, default F}
   
-  \item{jags}{the system call or path for activating JAGS. Default calls findjags() to attempt to locate JAGS on your system}
+  \item{jags}{the system call or path for activating 'JAGS'. Default calls findjags() to attempt to locate 'JAGS' on your system}
   
   \item{object}{object of class \code{BANOVA.Normal} (returned by \code{BANOVA.Normal})}
 
@@ -69,7 +69,7 @@ Level 1 model: \cr
   \item{data}{original data.frame}
   \item{mf1}{model.frame of level 1}
   \item{mf2}{model.frame of level 2}
-  \item{JAGSmodel}{JAGS model}
+  \item{JAGSmodel}{'JAGS' model}
 }
 
 \examples{
@@ -83,7 +83,7 @@ res <- BANOVA.Normal(attitude~1, ~owner + age + gender + selfbrand*conspic, ipad
 ipadstudy$id, burnin = 1000, sample = 1000, thin = 1 )
 summary(res)
 \donttest{
-# or use BANOVA.run based on Stan
+# or use BANOVA.run based on 'Stan'
 res <- BANOVA.run(attitude~1, ~owner + age + gender + selfbrand*conspic, 
 data = ipadstudy, model_name = 'Normal', id = ipadstudy$id, 
 iter = 100, thin = 1, chains = 2)

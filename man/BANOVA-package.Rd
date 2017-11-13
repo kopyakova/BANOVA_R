@@ -6,7 +6,7 @@
 BANOVA: Hierarchical Bayesian ANOVA Models
 }
 \description{
-This package includes several hierarchical Bayes Analysis of Variance models. These models are suited for the analysis of experimental designs in which both within- and between- subjects factors are manipulated, and account for a wide variety of distributions of the dependent variable. Floodlight analysis and mediation analysis basaed on these models are also provided. The package uses Stan and JAGS as the computational platform.
+This package includes several hierarchical Bayes Analysis of Variance models. These models are suited for the analysis of experimental designs in which both within- and between- subjects factors are manipulated, and account for a wide variety of distributions of the dependent variable. Floodlight analysis and mediation analysis basaed on these models are also provided. The package uses 'Stan' and 'JAGS' as the computational platform.
 }
 \details{
 \tabular{ll}{
