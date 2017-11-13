@@ -18,7 +18,7 @@ BANOVA.run <- function (l1_formula = 'NA',
                         y_value = NULL,
                         id, 
                         iter = 1000,
-                        num_trials = 0,
+                        num_trials = 1,
                         ...
                         ){
   if (l1_formula == 'NA'){
@@ -444,6 +444,7 @@ BANOVA.run <- function (l1_formula = 'NA',
               samples_l2_sigma_param = samples_l2_sigma_param,
               samples_cutp_param = samples_cutp_param,
               data = data, 
+              num_trials = num_trials,
               mf1 = mf1, 
               mf2 = mf2, 
               model_code = fit$stanmodel@model_code, 
