@@ -17,7 +17,7 @@ BANOVA.run <- function (l1_formula = 'NA',
                         data = NULL,
                         y_value = NULL,
                         id, 
-                        iter = 1000,
+                        iter = 2000,
                         num_trials = 1,
                         ...
                         ){
