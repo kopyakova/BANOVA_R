@@ -46,12 +46,6 @@ Wedel, M. and Dong, C. (2016) \emph{BANOVA: Bayesian Analysis of Variance for Co
 
 \examples{
 data(condstudy)
-\dontshow{
-out2 <- BANOVA.Normal(att~cond+pict, ~type, condstudy, condstudy$id, 
-burnin = 5, sample = 10, thin = 1)      
-# floodlight for pict 
-BANOVA.floodlight(out2, var_factor = 'type', var_numeric = 'pict') 
-}
 \donttest{
 # use BANOVA.run
 model <- BANOVA.model('Normal')
