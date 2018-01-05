@@ -1,7 +1,7 @@
 # find design matrix of coefficients of a mediator (including interactions which contains the mediator, using summation)
 # the mediator must be included in each interaction
 effect.matrix.mediator <- 
-function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA){
+function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA, xvar_include = FALSE, intercept_include = FALSE, flood_values = list()){
   # generate the effect matrix for each interaction, numerical covariates excluded, TODO: may have various levels for numeric variables
   # Args:
   #     interaction_factors       : a list of values of factors in the interaction to generate the effect matrix
@@ -18,10 +18,20 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA)
     for (i in 1:num_inter){
       names_inter[[i]] = attr(interaction_factors[[i]], 'var_names')
       if (is.factor(interaction_factors[[i]])){ 
-        levels_inter[[attr(interaction_factors[[i]], 'var_names')]] = levels(interaction_factors[[i]])
+        levels_inter[[names_inter[[i]]]] = levels(interaction_factors[[i]])
       }else{
         # for numeric or integer var, use 1 instead, e.g. the mediator
-        levels_inter[[attr(interaction_factors[[i]], 'var_names')]] = 1
+        if(names_inter[[i]] %in% c(mediator, xvar)){
+          levels_inter[[names_inter[[i]]]] = 1
+        }else{
+          if (names_inter[[i]] %in% names(flood_values)){
+            if (length(names(flood_values)) != length(unique(names(flood_values)))) stop('Please provide unique flood light values!', call. = FALSE)
+            if (length(flood_values[[names_inter[[i]]]]) > 1) stop('Please provide one value at a time for the other numeric variables!', call. = FALSE)
+            levels_inter[[names_inter[[i]]]] = flood_values[[names_inter[[i]]]]
+          }else{
+            levels_inter[[names_inter[[i]]]] = 0 #mean(interaction_factors[[i]])
+          }
+        }
       }
     }
     factors_inter = expand.grid(levels_inter)
@@ -29,7 +39,7 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA)
       if (length(unique(x)) > 1)
         as.factor(x)
       else
-        x
+        as.numeric(as.character(x))
     }
     factors_inter_factor = as.data.frame(lapply(factors_inter, temp_fun))
     formula_inter = paste(names_inter, collapse = '*')
@@ -47,7 +57,10 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA)
         tmp_mtx <- attr(attr(model_frame, 'terms'), 'factors')
         tmp_ind_m <- which(rownames(tmp_mtx) == mediator)
         tmp_ind_x <- which(rownames(tmp_mtx) == xvar)
-        assign_selected <- which(tmp_mtx[tmp_ind_m, ] == 1 & tmp_mtx[tmp_ind_x, ] == 0) 
+        if (!xvar_include)
+          assign_selected <- which(tmp_mtx[tmp_ind_m, ] == 1 & tmp_mtx[tmp_ind_x, ] == 0) 
+        else
+          assign_selected <- which(tmp_mtx[tmp_ind_m, ] == 1 & tmp_mtx[tmp_ind_x, ] == 1) 
         #assign_selected <- which(attr(attr(model_frame, 'terms'), 'factors')[mediator, ] == 1 & attr(attr(model_frame, 'terms'), 'factors')[xvar, ] == 0) 
       }else{
         tmp_mtx <- attr(attr(model_frame, 'terms'), 'factors')
@@ -56,7 +69,9 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA)
         #assign_selected <- which(attr(attr(model_frame, 'terms'), 'factors')[mediator, ] == 1)
       }
       column_selected <- which(attr(effect_matrix, 'assign') %in% assign_selected)
+      if (intercept_include) column_selected <- c(1,column_selected)
       effect_matrix_selected <- effect_matrix[ , column_selected, drop=FALSE]
+      attr(effect_matrix_selected, 'levels') = as.matrix(factors_inter)
     }else{
       if (!is.na(xvar) & (xvar %in% rownames(attr(attr(model_frame, 'terms'), 'factors')))){
         # exclude xvar
@@ -64,13 +79,21 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA)
         tmp_ind_x <- which(rownames(tmp_mtx) == xvar)
         assign_selected <- which(tmp_mtx[tmp_ind_x, ] == 0)
         column_selected <- which(attr(effect_matrix, 'assign') %in% assign_selected)
-        effect_matrix_selected <- effect_matrix[ , column_selected, drop=FALSE]
+        if (length(column_selected) == 0){
+          # intercept only
+          effect_matrix_selected <- array(1, dim = c(1, 1), dimnames = list(NULL, '(Intercept)'))
+          attr(effect_matrix_selected, 'levels') = as.matrix(array(1, dim = c(1, 1), dimnames = list(NULL, '(Intercept)')))
+        }else{
+          if (intercept_include) column_selected <- c(1,column_selected)
+          effect_matrix_selected <- effect_matrix[ , column_selected, drop=FALSE]
+          attr(effect_matrix_selected, 'levels') = as.matrix(factors_inter)
+        }
       }else{
         effect_matrix_selected <- effect_matrix
+        attr(effect_matrix_selected, 'levels') = as.matrix(factors_inter)
       }
     }
     
-    attr(effect_matrix_selected, 'levels') = as.matrix(factors_inter)
   }else{
     effect_matrix_selected = NA
   }

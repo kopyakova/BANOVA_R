@@ -6,7 +6,7 @@
 \code{BANOVA.floodlight} conducts floodlight analysis based on various BANOVA models.
 }
 \usage{
-BANOVA.floodlight(sol, var_numeric, var_factor)
+BANOVA.floodlight(sol, var_numeric, var_factor, flood_values = list())
 \method{print}{BANOVA.floodlight}(x, ...)
 }
 \arguments{
@@ -15,6 +15,8 @@ BANOVA.floodlight(sol, var_numeric, var_factor)
   \item{var_numeric}{the numeric variable}
 
   \item{var_factor}{the factor variable}
+  
+  \item{flood_values}{a list of values of the other numeric variables which interact with var_factor and var_numeric, the floodlight analysis will be based on these values, default 0}
   
   \item{x}{a BANOVA.floodlight object}
 
@@ -60,7 +62,17 @@ model <- BANOVA.model('Normal')
 stanmodel <- BANOVA.build(model)
 res <- BANOVA.run(att~cond+pict, ~type, fit = stanmodel, data = condstudy, 
                   id = condstudy$id, iter = 500, thin = 1, chains = 2)
-BANOVA.floodlight(res, var_factor = 'type', var_numeric = 'pict') 
+BANOVA.floodlight(res, var_factor = 'type', var_numeric = 'pict')
+
+data(colorad)
+colorad$num <- rnorm(nrow(colorad))
+res1 <- BANOVA.run(y ~ typic*num, ~ color*blur, fit = stanmodel_bin,
+                   data = colorad, id = colorad$id, 
+                   num_trials = as.integer(16))
+# floodlight analysis at the +sd(standard deviation) level
+BANOVA.floodlight(res1, var_factor = 'typic', 
+                  var_numeric = 'blur', list(num = sd(colorad$num)))
+
 }
 }
 
