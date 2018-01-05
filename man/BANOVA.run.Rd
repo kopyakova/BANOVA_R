@@ -10,7 +10,7 @@
 \usage{
 BANOVA.run(l1_formula = "NA", l2_formula = "NA", fit = NULL, model_name = 'NA', 
 dataX = NULL, dataZ = NULL, data = NULL, y_value = NULL, id, iter = 2000, 
-num_trials = 0, ...)
+num_trials = 1, ...)
 \method{summary}{BANOVA}(object, ...)
 \method{predict}{BANOVA}(object, newdata = NULL, Xsamples = NULL, Zsamples = 
                         NULL, ...)

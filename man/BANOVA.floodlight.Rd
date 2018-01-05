@@ -53,11 +53,7 @@ burnin = 5, sample = 10, thin = 1)
 BANOVA.floodlight(out2, var_factor = 'type', var_numeric = 'pict') 
 }
 \donttest{
-out2 <- BANOVA.Normal(att~cond+pict, ~type, condstudy, condstudy$id, 
-burnin = 5000, sample = 1000, thin = 20)      
-# floodlight for pict 
-BANOVA.floodlight(out2, var_factor = 'type', var_numeric = 'pict') 
-# or use BANOVA.run
+# use BANOVA.run
 model <- BANOVA.model('Normal')
 stanmodel <- BANOVA.build(model)
 res <- BANOVA.run(att~cond+pict, ~type, fit = stanmodel, data = condstudy, 
