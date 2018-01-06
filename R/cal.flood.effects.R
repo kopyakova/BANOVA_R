@@ -30,6 +30,7 @@ cal.flood.effects <-
     numeric_in_l1 <- numeric_name %in% rownames(model1_level1_var_matrix)
     numeric_in_l2 <- numeric_name %in% rownames(model1_level2_var_matrix)
     if (!factor_in_l1 & !factor_in_l2) stop(factor_name," is not included in the model!")
+    if (!numeric_in_l1 & !numeric_in_l2) stop(numeric_name," is not included in the model!")
     # mediator is at level 1
     if (factor_in_l1 & numeric_in_l2 ){
       factor_assign <- which (rownames(model1_level1_var_matrix) == factor_name)
@@ -75,7 +76,8 @@ cal.flood.effects <-
           colnames(l2_matrix) <- c(" ")
         }
       }else{
-        num_l2_matrix <- effect.matrix.mediator(interaction_factors = l2_values,  
+        num_l2_matrix <- effect.matrix.mediator(interaction_factors = l2_values,
+                                                matrix_formula=formula(attr(sol_1$mf2, 'terms')),
                                                 mediator=numeric_name, 
                                                 flood_values = flood_values)
         l2_matrix <- effect.matrix.mediator(interaction_factors = l2_values, 
@@ -171,6 +173,7 @@ cal.flood.effects <-
         }
       }else{
         l2_matrix <- effect.matrix.mediator(interaction_factors = l2_values, 
+                                            matrix_formula=formula(attr(sol_1$mf2, 'terms')),
                                             flood_values = flood_values)
       }
       if (length(factor_interaction_list) > 0){
@@ -180,16 +183,16 @@ cal.flood.effects <-
         num_factor_interaction_effect_matrix <- list()
         # remove y
         # find the response variable
-        vars <- as.character(attr(attr(sol_1$mf1, 'terms'), 'variables'))[-1]
-        response_ind <- attr(attr(sol_1$mf1, 'terms'), 'response')
-        response_name <- vars[response_ind]
-        #remove the response value from l1_values
-        to_rm_res <- 0
-        for (i in 1:length(l1_values)){
-          if (attr(l1_values[[i]], 'var_names') == response_name) to_rm_res <- i
-        }
-        num_l1_values <- l1_values
-        num_l1_values[[to_rm_res]] <- NULL
+        # vars <- as.character(attr(attr(sol_1$mf1, 'terms'), 'variables'))[-1]
+        # response_ind <- attr(attr(sol_1$mf1, 'terms'), 'response')
+        # response_name <- vars[response_ind]
+        # #remove the response value from l1_values
+        # to_rm_res <- 0
+        # for (i in 1:length(l1_values)){
+        #   if (attr(l1_values[[i]], 'var_names') == response_name) to_rm_res <- i
+        # }
+        # num_l1_values <- l1_values
+        # num_l1_values[[to_rm_res]] <- NULL
         for (i in 1:length(factor_interaction_list)){
           # l1 matrix should include the effects of interactions contains both the numeric and factor
           # TO check:
@@ -198,7 +201,8 @@ cal.flood.effects <-
                                                                           mediator=factor_name, 
                                                                           xvar=numeric_name, 
                                                                           flood_values = flood_values)
-          num_factor_interaction_effect_matrix[[i]] <- effect.matrix.mediator(interaction_factors = num_l1_values, 
+          num_factor_interaction_effect_matrix[[i]] <- effect.matrix.mediator(interaction_factors = l1_values,
+                                                                              matrix_formula=formula(attr(sol_1$mf1, 'terms')),
                                                                               mediator=factor_name, 
                                                                               xvar=numeric_name, 
                                                                               xvar_include = TRUE, 
@@ -233,16 +237,17 @@ cal.flood.effects <-
                                             mediator=factor_name, 
                                             flood_values = flood_values)
         # find the response variable
-        vars <- as.character(attr(attr(sol_1$mf1, 'terms'), 'variables'))[-1]
-        response_ind <- attr(attr(sol_1$mf1, 'terms'), 'response')
-        response_name <- vars[response_ind]
-        #remove the response value from l1_values
-        to_rm_res <- 0
-        for (i in 1:length(l1_values)){
-          if (attr(l1_values[[i]], 'var_names') == response_name) to_rm_res <- i
-        }
-        l1_values[[to_rm_res]] <- NULL
+        # vars <- as.character(attr(attr(sol_1$mf1, 'terms'), 'variables'))[-1]
+        # response_ind <- attr(attr(sol_1$mf1, 'terms'), 'response')
+        # response_name <- vars[response_ind]
+        # #remove the response value from l1_values
+        # to_rm_res <- 0
+        # for (i in 1:length(l1_values)){
+        #   if (attr(l1_values[[i]], 'var_names') == response_name) to_rm_res <- i
+        # }
+        # l1_values[[to_rm_res]] <- NULL
         num_l1_matrix <- effect.matrix.mediator(l1_values, 
+                                                matrix_formula=formula(attr(sol_1$mf1, 'terms')),
                                                 mediator=factor_name, 
                                                 xvar = numeric_name, 
                                                 xvar_include = TRUE, 
@@ -338,6 +343,7 @@ cal.flood.effects <-
         }
       }else{
         num_l2_matrix <- effect.matrix.mediator(interaction_factors = l2_values, 
+                                                matrix_formula=formula(attr(sol_1$mf2, 'terms')), 
                                                 mediator = factor_name, 
                                                 flood_values = flood_values)
       }
@@ -426,15 +432,15 @@ cal.flood.effects <-
       l1_values <- attr(sol_1$dMatrice$X, 'varValues')
       # exclude y var
       # find the response variable
-      vars <- as.character(attr(attr(sol_1$mf1, 'terms'), 'variables'))[-1]
-      response_ind <- attr(attr(sol_1$mf1, 'terms'), 'response')
-      response_name <- vars[response_ind]
-      #remove the response value from l1_values
-      to_rm_res <- 0
-      for (i in 1:length(l1_values)){
-        if (attr(l1_values[[i]], 'var_names') == response_name) to_rm_res <- i
-      }
-      l1_values[[to_rm_res]] <- NULL
+      # vars <- as.character(attr(attr(sol_1$mf1, 'terms'), 'variables'))[-1]
+      # response_ind <- attr(attr(sol_1$mf1, 'terms'), 'response')
+      # response_name <- vars[response_ind]
+      # #remove the response value from l1_values
+      # to_rm_res <- 0
+      # for (i in 1:length(l1_values)){
+      #   if (attr(l1_values[[i]], 'var_names') == response_name) to_rm_res <- i
+      # }
+      # l1_values[[to_rm_res]] <- NULL
       
       if (length(l1_values) == 0){
         # only intercept included
@@ -443,10 +449,12 @@ cal.flood.effects <-
         attr(l1_matrix, "levels") <- l1_matrix
       }else{
         l1_matrix <- effect.matrix.mediator(interaction_factors = l1_values, 
+                                            matrix_formula=formula(attr(sol_1$mf1, 'terms')),
                                             flood_values = flood_values)
       }
       l2_values <- attr(sol_1$dMatrice$Z, 'varValues')
       num_l2_matrix <- effect.matrix.mediator(l2_values, 
+                                              matrix_formula=formula(attr(sol_1$mf2, 'terms')),
                                               mediator=factor_name, 
                                               xvar = numeric_name, 
                                               xvar_include = TRUE, 
@@ -513,9 +521,10 @@ construct.effect.table <-
     table_num <- generate.table.samples(num_est_samples, num_row_name, num_col_name)
     names_to_merge <- intersect(c(colnames(row_name), colnames(col_name)), c(colnames(num_row_name), colnames(num_col_name)))
     samples_tb <- merge(table_f$tb, table_num$tb, by = names_to_merge, all.x = TRUE, suffixes = c(".x",".y"))
+    names_union <-  union(c(colnames(row_name), colnames(col_name)), c(colnames(num_row_name), colnames(num_col_name)))
     # calculate floodlights
-    floodlight_table <- array(NA, dim = c(nrow(samples_tb), length(c(colnames(row_name), colnames(col_name))) + 3), dimnames = list(rep("",nrow(samples_tb)), c(c(colnames(row_name), colnames(col_name)),'mean', '2.5%', '97.5%')))
-    floodlight_table[, c(colnames(row_name), colnames(col_name))] <- as.matrix(samples_tb[, c(colnames(row_name), colnames(col_name))])
+    floodlight_table <- array(NA, dim = c(nrow(samples_tb), length(names_union) + 3), dimnames = list(rep("",nrow(samples_tb)), c(names_union,'mean', '2.5%', '97.5%')))
+    floodlight_table[, names_union] <- as.matrix(samples_tb[, names_union])
     for (i in 1: nrow(samples_tb)){
       sample_values <- -as.numeric(as.matrix(samples_tb[i, paste(sample_names, ".x", sep = "")]))/as.numeric(as.matrix(samples_tb[i, paste(sample_names, ".y", sep = "")]))
       floodlight_table[i, 'mean'] <- round(mean(sample_values, na.rm = TRUE), digits = 4)
@@ -526,7 +535,8 @@ construct.effect.table <-
     factor_name <- attr(factor_values[[1]], "var_names")
     # select only one value of the factor
     num_levels <- length(unique(factor_values[[1]]))
-    if (num_levels > 2) stop("The number of levels of the factor is greater than 2. This is not supported yet.")
+    if (num_levels > 2) stop("The number of levels of the factor is greater than 2. This is not supported yet.", call. = FALSE)
+    if (num_levels == 1) stop("The number of levels of the factor should be equal to two.", call. = FALSE)
     floodlight_table <- subset(floodlight_table, floodlight_table[, factor_name] == as.character(factor_values[[1]][1]))
     if (numeric_name %in% colnames(floodlight_table))  floodlight_table <- floodlight_table[, -which(colnames(floodlight_table) == numeric_name), drop = FALSE]
     if (factor_name %in% colnames(floodlight_table)) floodlight_table <- floodlight_table[, -which(colnames(floodlight_table) == factor_name), drop = FALSE]

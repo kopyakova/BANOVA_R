@@ -35,6 +35,16 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA,
       }
     }
     factors_inter = expand.grid(levels_inter)
+    level_factor <- factors_inter
+    # remove the response variable
+    if (!is.null(matrix_formula)){
+      the_term <- terms(matrix_formula)
+      if (attr(the_term, 'response') > 0){
+        all_names <- as.character(attr(the_term, "variables"))[-1]
+        response_name <- all_names[attr(the_term, 'response')]
+        level_factor[response_name] <- NULL
+      }
+    }
     temp_fun <- function(x){
       if (length(unique(x)) > 1)
         as.factor(x)
@@ -50,7 +60,8 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA,
       #eval(parse(text = paste('model_frame <- model.frame(',matrix_formula,', data = factors_inter_factor)', sep='')))
 
     effect_matrix <- model.matrix(formula(attr(model_frame, 'terms')), data = factors_inter_factor)
-    attr(effect_matrix, 'levels') = as.matrix(factors_inter)
+    #attr(effect_matrix, 'levels') = as.matrix(factors_inter)
+    attr(effect_matrix, 'levels') = as.matrix(level_factor)
     if (!is.na(mediator)){
       # only calculate the summation of coefficients that related to the mediator exclude xvar
       if (!is.na(xvar) & (xvar %in% rownames(attr(attr(model_frame, 'terms'), 'factors')))){
@@ -71,7 +82,7 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA,
       column_selected <- which(attr(effect_matrix, 'assign') %in% assign_selected)
       if (intercept_include) column_selected <- c(1,column_selected)
       effect_matrix_selected <- effect_matrix[ , column_selected, drop=FALSE]
-      attr(effect_matrix_selected, 'levels') = as.matrix(factors_inter)
+      attr(effect_matrix_selected, 'levels') = as.matrix(level_factor)
     }else{
       if (!is.na(xvar) & (xvar %in% rownames(attr(attr(model_frame, 'terms'), 'factors')))){
         # exclude xvar
@@ -86,11 +97,11 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA,
         }else{
           if (intercept_include) column_selected <- c(1,column_selected)
           effect_matrix_selected <- effect_matrix[ , column_selected, drop=FALSE]
-          attr(effect_matrix_selected, 'levels') = as.matrix(factors_inter)
+          attr(effect_matrix_selected, 'levels') = as.matrix(level_factor)
         }
       }else{
         effect_matrix_selected <- effect_matrix
-        attr(effect_matrix_selected, 'levels') = as.matrix(factors_inter)
+        attr(effect_matrix_selected, 'levels') = as.matrix(level_factor)
       }
     }
     
