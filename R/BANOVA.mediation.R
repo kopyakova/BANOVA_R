@@ -3,7 +3,8 @@
 ###
 BANOVA.mediation <-
   function(sol_1, sol_2, xvar, mediator){
-    if(!(class(sol_1) %in% c('BANOVA', 'BANOVA.Normal', 'BANOVA.T', 'BANOVA.Poisson', 'BANOVA.Bern', 'BANOVA.Bin', 'BANOVA.ordMultinomial', 'BANOVA.Multinomial'))) stop('Model is not recognized')
+    if(!(class(sol_1) %in% c('BANOVA', 'BANOVA.Normal', 'BANOVA.T', 'BANOVA.Poisson', 'BANOVA.Bern', 'BANOVA.Bin', 'BANOVA.ordMultinomial'))) stop('The Model is not supported yet')
+    if(sol_1$model_name == 'BANOVA.Multinomial') stop('The Model is not supported yet')
     if(sol_2$model_name != 'BANOVA.Normal') stop('The mediator must follow the Normal distribution, use BANOVA Normal models instead.')
     
     X_names = colnames(sol_1$dMatrice$X)

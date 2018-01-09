@@ -11,6 +11,8 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA,
   # Returns:
   #     an effect matrix
   #
+  tmp_contrasts <- getOption("contrasts")
+  options(contrasts = rep("contr.sum",2))
   if (length(interaction_factors) > 0){
     num_inter = length(interaction_factors)
     levels_inter = list()
@@ -108,5 +110,6 @@ function (interaction_factors=list(), mediator=NA, matrix_formula=NULL, xvar=NA,
   }else{
     effect_matrix_selected = NA
   }
+  options(contrasts = tmp_contrasts)
   return(effect_matrix_selected)
 }

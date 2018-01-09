@@ -63,7 +63,9 @@ out2 <- BANOVA.run(att~cond+pict, ~type, fit = stanmodel, data = condstudy,
 out3 <- BANOVA.run(pict~cond, ~type, fit = stanmodel, data = condstudy, 
                   id = condstudy$id, iter = 500, thin = 1, chains = 2)
 # (moderated) mediation
-BANOVA.mediation(out2, out3, xvar='cond', mediator='pict')
+sol <- BANOVA.mediation(out2, out3, xvar='cond', mediator='pict')
+print(sol)
+print(sol$dir_effects)
 }
 
 }
