@@ -1,5 +1,5 @@
 # BANOVA R package
-http://www.r-pkg.org/badges/version/{BANOVA}
+http://www.r-pkg.org/badges/version/BANOVA
 
 V0.6 improvements:
   1. add checking missing data for independent variables
