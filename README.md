@@ -1,4 +1,7 @@
 # BANOVA R package
+[![CRAN
+version](http://www.r-pkg.org/badges/version/BANOVA)](http://www.r-pkg.org/pkg/BANOVA)
+[![download-badge](http://cranlogs.r-pkg.org/badges/BANOVA)](https://cran.r-project.org/package=BANOVA)
 V0.6 improvements:
   1. add checking missing data for independent variables
   2. Fix typos
