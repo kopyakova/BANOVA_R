@@ -1,8 +1,8 @@
 Package: BANOVA
 Type: Package
 Title: Hierarchical Bayesian ANOVA Models
-Version: 1.1.1
-Date: 2018-01-21
+Version: 1.1.2
+Date: 2019-01-21
 Author: Chen Dong, Michel Wedel
 SystemRequirements: C++11, JAGS >= 4.1.0 (http://mcmc-jags.sourceforge.net)
 Maintainer: Chen Dong <cdong@math.umd.edu>

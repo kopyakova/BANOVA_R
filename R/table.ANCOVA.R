@@ -5,12 +5,13 @@ table.ANCOVA <-
            samples_l2_param, 
            y_val = NULL, 
            error = NULL, # for bernoulli binomial and multinomial case, sigle level, need to be fixed here
-           l1_error = NULL, # variance of the level 1 error 
            multi = F, 
            n_cat = 0, 
-           choice = 0){
+           choice = 0,
+           l1_error = 0 # variance of the level 1 error 
+           ){
     eff_digits = 3
-    if (length(attr(Z, 'varNames')) > 1){
+    if (length(attr(Z, 'varNames')) >= 1){
       if(!is.null(error)){ #for bernoulli binomial and multinomial case, single level
         num_l1_v <- ncol(X) # should be the same with num_l1
         num_l2_v <- length(attr(Z, 'varNames')) - 1# Not include intercept

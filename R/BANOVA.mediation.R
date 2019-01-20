@@ -186,7 +186,6 @@ BANOVA.mediation <-
           sol$individual_indirect[[k]] <- rabind(sol$indir_effects[[k]])
           k <- k + 1
         }
-      #TODO generate direct and indirect effects (and effect size) big table with id(new_id to original id)  
       
       sol$xvar = xvar
       sol$mediator = mediator
@@ -363,10 +362,20 @@ combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effec
       result_table[ind,'p.value', i] <- ifelse(round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4) == 0, '<0.0001', round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4))
       result_table_sample[ind, paste('s_', 1:common_n_sample, sep = ""), i] <- m_samples
     }
-  
     # compute effect size for the indirect effect
     if (mediator %in% union_names)
       union_names <- union_names[-which(union_names == mediator)]
+    if ('(Intercept)' %in% union_names)
+      union_names <- union_names[-which(union_names == '(Intercept)')]
+    #remove numeric variable
+    to_rm <- c()
+    for (to_rm_ind in 1:length(union_names)){
+      if (is.numeric(data[,union_names[to_rm_ind]])){
+        to_rm <- c(to_rm, to_rm_ind)
+      }
+    }
+    if (length(to_rm) > 0)
+      union_names <- union_names[-to_rm]
     data_eff <- data[, union_names, drop = F]
     data_eff_sample <- merge(data_eff, result_table_sample[,,i], by = union_names, all.x = TRUE)
     data_eff_sample <- apply(data_eff_sample[, paste('s_', 1:common_n_sample, sep = "")], 2, as.character)
@@ -396,8 +405,8 @@ combine.effects <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq
   table_2_names_index.df <- table_2_names_index
   table_1_names_index.df <- table_1_names_index
   temp_table_index <- merge(table_2_names_index.df, table_1_names_index.df, by = intersect(colnames(table_1_names), colnames(table_2_names)), all.x = T)
-  table_1_est_sample_index <- temp_table_index[,colnames(temp_1)]
-  table_2_est_sample_index <- temp_table_index[,colnames(temp_2)]
+  table_1_est_sample_index <- temp_table_index[,colnames(temp_1), drop = F]
+  table_2_est_sample_index <- temp_table_index[,colnames(temp_2), drop = F]
   # standardize the names of this table, so that the output table looks consistant, direct vs indirect, e.g. sort the column names
   union_names <- union(colnames(table_1_names), colnames(table_2_names))
   union_names <- union_names[order(union_names)]
@@ -418,20 +427,31 @@ combine.effects <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq
   # compute effect size for the indirect effect
   if (mediator %in% union_names)
     union_names <- union_names[-which(union_names == mediator)]
-  data_eff <- data[, union_names]
+  if ('(Intercept)' %in% union_names)
+    union_names <- union_names[-which(union_names == '(Intercept)')]
+  # remove numeric variable
+  to_rm <- c()
+  for (i in 1:length(union_names)){
+    if (is.numeric(data[,union_names[i]])){
+      to_rm <- c(to_rm, i)
+    }
+  }
+  if (length(to_rm) > 0)
+    union_names <- union_names[-to_rm]
+  data_eff <- data[, union_names, drop = F]
   data_eff_sample <- merge(data_eff, result_table_sample, by = union_names, all.x = TRUE)
   data_eff_sample <- apply(data_eff_sample[, paste('s_', 1:common_n_sample, sep = "")], 2, as.character)
   data_eff_sample <- apply(data_eff_sample, 2, as.numeric)
   var_sample <- apply(data_eff_sample, 2, var)
   eff_sample <- var_sample/(var_sample + tau_ySq)
-  effect_size <- paste(round(mean(eff_sample), 3), " (", paste(round(quantile(eff_sample, probs = c(0.025, 0.975)),3), collapse = ','), ")", sep="")
+  effect_size <- paste(round(mean(eff_sample), 3), " (", paste(round(quantile(eff_sample, probs = c(0.025, 0.975), na.rm = T),3), collapse = ','), ")", sep="")
   #sort values column by column
   result_table <- data.frame(result_table, check.names=FALSE)
   result_table <- result_table[do.call(order, result_table), ]
   return(list(table = result_table, effect_size = effect_size))
 }
 
-# three dimensional array b cbind first two dimensions with a (2 dim)
+# a three dimensional array b cbind its first two dimension matrice with a matrix a (2 dim)
 abind <- function(a, b){
   n_id <- dim(b)[3]
   n_r <- dim(b)[1]
