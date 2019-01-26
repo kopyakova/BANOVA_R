@@ -75,6 +75,8 @@ BANOVA.run <- function (l1_formula = 'NA',
       old_id = data[, id]
     else
       stop(id, ' is not found in the data!')
+  }else{
+    stop('id ambiguous!')
   }
   if (l2_formula == 'NA'){
     # single level models
