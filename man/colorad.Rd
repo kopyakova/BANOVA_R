@@ -43,7 +43,7 @@ out0_contra = BANOVA.run(y ~ typic, ~ color*blurfac, fit = stanmodel_bin,
                           contrast = list(typic = c(-1,1), 
                           blurfac = c(1,1,0,-1,-1)))
 summary(out0_contra)
-# floolight analysis
+# floodlight analysis
 set.seed(200)
 out0_f = BANOVA.run(y ~ typic, ~ color*blur, fit = stanmodel_bin,
                      data = colorad, id = 'id', num_trials = as.integer(16), 
