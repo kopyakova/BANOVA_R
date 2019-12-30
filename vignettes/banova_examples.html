@@ -12,7 +12,7 @@
 
 <meta name="author" content="Chen Dong" />
 
-<meta name="date" content="2019-07-20" />
+<meta name="date" content="2019-08-11" />
 
 <title>BANOVA examples</title>
 
@@ -303,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">BANOVA examples</h1>
 <h4 class="author">Chen Dong</h4>
-<h4 class="date">2019-07-20</h4>
+<h4 class="date">2019-08-11</h4>
 
 
 
@@ -326,11 +326,12 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <h2>Models &amp; results</h2>
 <p>We are interested in the effects of within- and between- subjects factors typic and color, and the variable blur, as well as their interactions. The factor typic varies within individuals; the factors blur, color and blur x color interaction vary between subjects.</p>
 <p>The analysis of this experiment is executed with the function <code>BANOVA.run()</code> in the <strong>BANOVA</strong> package (the continuous covariate blur is mean centered by default). The R code to implement the analysis is shown below. For this model, the <code>BANOVA</code> function call needs to include the binomial total (16) as an additional argument.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">set.seed</span>(<span class="dv">700</span>)</a>
-<a class="sourceLine" id="cb2-2" title="2">model &lt;-<span class="st"> </span><span class="kw">BANOVA.model</span>(<span class="dt">model_name =</span> <span class="st">&#39;Binomial&#39;</span>)</a>
-<a class="sourceLine" id="cb2-3" title="3">banova_fit &lt;-<span class="st"> </span><span class="kw">BANOVA.build</span>(model)</a>
-<a class="sourceLine" id="cb2-4" title="4">res &lt;-<span class="st"> </span><span class="kw">BANOVA.run</span>(y<span class="op">~</span>typic, <span class="op">~</span>color<span class="op">*</span>blur, <span class="dt">data =</span> colorad, <span class="dt">fit =</span> banova_fit,</a>
-<a class="sourceLine" id="cb2-5" title="5">                  <span class="dt">id =</span> <span class="st">&#39;id&#39;</span>, <span class="dt">num_trials =</span> <span class="kw">as.integer</span>(<span class="dv">16</span>), <span class="dt">iter =</span> <span class="dv">1000</span>, <span class="dt">thin =</span> <span class="dv">1</span>, <span class="dt">chains =</span> <span class="dv">2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1"><span class="kw">library</span>(rstan)</a>
+<a class="sourceLine" id="cb2-2" title="2"><span class="kw">set.seed</span>(<span class="dv">700</span>)</a>
+<a class="sourceLine" id="cb2-3" title="3">model &lt;-<span class="st"> </span><span class="kw">BANOVA.model</span>(<span class="dt">model_name =</span> <span class="st">&#39;Binomial&#39;</span>)</a>
+<a class="sourceLine" id="cb2-4" title="4">banova_fit &lt;-<span class="st"> </span><span class="kw">BANOVA.build</span>(model)</a>
+<a class="sourceLine" id="cb2-5" title="5">res &lt;-<span class="st"> </span><span class="kw">BANOVA.run</span>(y<span class="op">~</span>typic, <span class="op">~</span>color<span class="op">*</span>blur, <span class="dt">data =</span> colorad, <span class="dt">fit =</span> banova_fit,</a>
+<a class="sourceLine" id="cb2-6" title="6">                  <span class="dt">id =</span> <span class="st">&#39;id&#39;</span>, <span class="dt">num_trials =</span> <span class="kw">as.integer</span>(<span class="dv">16</span>), <span class="dt">iter =</span> <span class="dv">1000</span>, <span class="dt">thin =</span> <span class="dv">1</span>, <span class="dt">chains =</span> <span class="dv">2</span>)</a></code></pre></div>
 <p>The commands above load and build (compile) a Binomial Stan model included in the package. Then, the function <code>BANOVA.run</code> is called to run the simulation using two chains (1000 iterations each with thin = 1). Alternatively, users can set up the <code>model_name</code> argument to run the simulation directly using a precompiled model (note that it might report errors if compiler settings are not correct).</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">res_alt &lt;-<span class="st"> </span><span class="kw">BANOVA.run</span>(y<span class="op">~</span>typic, <span class="op">~</span>color<span class="op">*</span>blur, <span class="dt">data =</span> colorad, <span class="dt">model_name =</span> <span class="st">&#39;Binomial&#39;</span>,</a>
 <a class="sourceLine" id="cb3-2" title="2">                     <span class="dt">id =</span> <span class="st">&#39;id&#39;</span>, <span class="dt">num_trials =</span> <span class="kw">as.integer</span>(<span class="dv">16</span>), <span class="dt">iter =</span> <span class="dv">1000</span>, <span class="dt">thin =</span> <span class="dv">1</span>, <span class="dt">chains =</span> <span class="dv">2</span>)</a></code></pre></div>
@@ -451,9 +452,10 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb4-114" title="114"><span class="co">#&gt;  1     1     8.5735  7.4431 9.6343</span></a></code></pre></div>
 <p>Based on the above estimates, ad identification is significantly influenced by ad typicality (typic): typical ads are identified more accurately as ads, compared to atypical ads. The accuracy of ad identification is also affected by the degree of blur and its interaction with typic. The three-factor interaction (blur x color x typic) is significant, which reveals that color protects the identification of typical ads against blur, which is in line with the findings of Wedel and Pieters (2015).</p>
 <p>These results are based on the <strong>BANOVA</strong> model with blur as a continuous covariate. To further understand the effects of blur, we can use the discrete variable blur (blurfac) in a two-way <strong>BANOVA</strong> at the between-subjects level (and the factor typic again within-subjects), using the following command:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">set.seed</span>(<span class="dv">900</span>)</a>
-<a class="sourceLine" id="cb5-2" title="2">res_fac &lt;-<span class="st"> </span><span class="kw">BANOVA.run</span>(y<span class="op">~</span>typic, <span class="op">~</span>color<span class="op">*</span>blurfac, <span class="dt">data =</span> colorad, <span class="dt">fit =</span> banova_fit,</a>
-<a class="sourceLine" id="cb5-3" title="3">                  <span class="dt">id =</span> <span class="st">&#39;id&#39;</span>, <span class="dt">num_trials =</span> <span class="kw">as.integer</span>(<span class="dv">16</span>), <span class="dt">iter =</span> <span class="dv">2000</span>, <span class="dt">thin =</span> <span class="dv">1</span>, <span class="dt">chains =</span> <span class="dv">2</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="kw">library</span>(rstan)</a>
+<a class="sourceLine" id="cb5-2" title="2"><span class="kw">set.seed</span>(<span class="dv">900</span>)</a>
+<a class="sourceLine" id="cb5-3" title="3">res_fac &lt;-<span class="st"> </span><span class="kw">BANOVA.run</span>(y<span class="op">~</span>typic, <span class="op">~</span>color<span class="op">*</span>blurfac, <span class="dt">data =</span> colorad, <span class="dt">fit =</span> banova_fit,</a>
+<a class="sourceLine" id="cb5-4" title="4">                  <span class="dt">id =</span> <span class="st">&#39;id&#39;</span>, <span class="dt">num_trials =</span> <span class="kw">as.integer</span>(<span class="dv">16</span>), <span class="dt">iter =</span> <span class="dv">2000</span>, <span class="dt">thin =</span> <span class="dv">1</span>, <span class="dt">chains =</span> <span class="dv">2</span>)</a></code></pre></div>
 <p>Since the above model involves more parameters, a larger number of iterations is used to ensure the chains for all parameters converge (iter = 2000).</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">summary</span>(res_fac)</a>
 <a class="sourceLine" id="cb6-2" title="2"><span class="co">#&gt; Call:</span></a>
