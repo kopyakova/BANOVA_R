@@ -56,6 +56,8 @@ res <- BANOVA.run(att~cond+pict, ~type, fit = stanmodel, data = condstudy,
 BANOVA.floodlight(res, var_factor = 'type', var_numeric = 'pict')
 
 data(colorad)
+model_bin <- BANOVA.model('Binomial')
+stanmodel_bin <- BANOVA.build(model_bin)
 colorad$num <- rnorm(nrow(colorad))
 res1 <- BANOVA.run(y ~ typic*num, ~ color*blur, fit = stanmodel_bin,
                    data = colorad, id = 'id', 

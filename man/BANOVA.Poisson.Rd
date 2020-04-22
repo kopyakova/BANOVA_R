@@ -86,6 +86,7 @@ burnin = 5000, sample = 2000, thin = 10)
 summary(res2)
 
 # or use the BANOVA.run based on 'Stan'
+require(rstan)
 res3 <- BANOVA.run(bid~1, ~progress*prodvar, data = goalstudy, 
 model_name = 'Poisson', id = 'id', iter = 100, thin = 1, chains = 2)
 

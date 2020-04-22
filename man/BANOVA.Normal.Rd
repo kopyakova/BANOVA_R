@@ -84,6 +84,7 @@ ipadstudy$id, burnin = 1000, sample = 1000, thin = 1 )
 summary(res)
 \donttest{
 # or use BANOVA.run based on 'Stan'
+require(rstan)
 res <- BANOVA.run(attitude~1, ~owner + age + gender + selfbrand*conspic, 
 data = ipadstudy, model_name = 'Normal', id = 'id', 
 iter = 100, thin = 1, chains = 2)

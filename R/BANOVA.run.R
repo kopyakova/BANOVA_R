@@ -74,9 +74,13 @@ BANOVA.run <- function (l1_formula = 'NA',
     if (id %in% colnames(data))
       old_id = data[, id]
     else
-      stop(id, ' is not found in the data!')
+      stop(id, ' is not found in the input data, please assign values directly!')
   }else{
-    stop('id ambiguous!')
+    if (model_name != 'Multinomial') {
+      stop('id ambiguous!')
+    }else{
+      old_id = id
+    }
   }
   if (l2_formula == 'NA'){
     # single level models
