@@ -83,7 +83,7 @@ burnin = 5000, sample = 2000, thin = 10)
 summary(res)
 # or use BANOVA.run
 require(rstan)
-res0 <- BANOVA.run(y~typic, ~color*blur, data = colorad, model_name = 'Binomial',
+res0 <- BANOVA.run(y~typic, ~color*blurfac, data = colorad, model_name = 'Binomial',
 id = 'id', num_trials = as.integer(16), iter = 100, thin = 1, chains = 2)
 summary(res0)
 table.predictions(res0)
