@@ -383,8 +383,6 @@ BANOVA.run <- function (l1_formula = 'NA',
       model_name <- fit$model_name
       single_level <- fit$single_level
     }
-    print(fit$stanmodel)
-    print(pooled_data_dict)
     stan.fit <- rstan::sampling(fit$stanmodel, data = pooled_data_dict, iter=iter, verbose=TRUE, ...)
     ### find samples ###
     # beta1 JxM
