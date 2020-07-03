@@ -155,7 +155,7 @@ BANOVA.run <- function (l1_formula = 'NA',
       # print one table for each alternative
       anova.table <- list()
       for (i in 1:n_categories)
-        anova.table[[i]] <- table.ANCOVA(samples_l2_param, dMatrice$Z, dMatrice$X_full[[i]], samples_l1_param, error = pi^2/6, multi = T, n_cat = n_categories, choice = i-1) #intercept_1 doesn't exist
+        anova.table[[i]] <- table.ANCOVA(samples_l2_param, dMatrice$Z, dMatrice$X_full[[i]], samples_l1_param, error = pi^2/6, multi = T, n_cat = n_categories, choice = i-1, y_val = y_value, model = model_name) #intercept_1 doesn't exist
       coef.tables <- table.coefficients(samples_l1_param, beta1_names, colnames(dMatrice$Z), colnames(dMatrice$X_full[[1]]), 
                                         attr(dMatrice$Z, 'assign') + 1, attr(dMatrice$X_full[[1]], 'assign'), samples_cutp_param )
       pvalue.table <- table.pvalue(coef.tables$coeff_table, coef.tables$row_indices, l1_names = attr(dMatrice$Z, 'varNames'), 
