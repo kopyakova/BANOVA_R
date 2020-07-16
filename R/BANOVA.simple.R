@@ -1,5 +1,3 @@
-#library(roxygen2); # Read in the roxygen2 R package
-#roxygenise();      # Builds the help files
 #' Simple effects calculation
 #'
 #' \code{BANOVA.simple} calculates simple or partial effects, also known as simple main effects in a
@@ -32,11 +30,17 @@
 #' @details  The function identifies all factors and their combinations that are interacting with a moderating of "base"
 #' variable. For each interaction, it determines all possible level combinations of the involved regressors,
 #' which are further used to combine the posterior samples of the selected regression coefficients to calculate 
-#' simple effects.
+#' simple effects. 
+#' 
+#' When the default effect coding scheme is used the simple effects are calculated for all levels of the 
+#' interacting variables, as specified in the data. If a user specifies different contrasts for any of the interacting 
+#' variables the simple effects for these variables are reported for the user-defined 
+#' regressors. This distinction is reflected in the labels of the reported results: in the default case labels from the 
+#' original factors are displayed; in the case of user-defined contrasts, the name of the regressor is displayed instead. 
 #' 
 #' The summary of the posterior distribution of each simple effect contains the mean, 
 #' standard deviation, posterior interval, which by default reports a central 95\% interval, 
-#' but also can be specified by the user and a Bayesian p-value. 
+#' but can also be specified by the user, and a Bayesian p-value. 
 #' 
 #' Note that for a Multinomial model intercepts and between-subject regressors have choice specific 
 #' coefficients and thus simple effects are reported for each possible choice outcome. To perform the 
@@ -57,14 +61,7 @@
 #' @export
 BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975), dep_var_name = NULL, 
                           return_posterior_samples = FALSE){
-  source('~/BANOVA_R/R/effect.matrix.interaction.R', echo=F)
-  source('~/BANOVA_R/R/util.R', echo=F)
-  source('~/BANOVA_R/R/design.matrix.R', echo=F)
-  source('~/BANOVA_R/R/get.interactions.R', echo=F)
-  source('~/BANOVA_R/R/get.values.R', echo=F)
-  source('~/BANOVA_R/R/mean.center.R', echo=F)
-  source('~/BANOVA_R/R/pValues.R', echo=F)
-  
+
   check.quantiles <- function(){
     #quantiles must be real numbers
     if(!is(quantiles, "numeric")){
@@ -196,30 +193,95 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
     }
     
     # create.table creates tables with results used for printing
-    create.table <- function(){
-      #fill in the results
+    create.table <- function(remove_last_level = F){
+
+      # is.effect.coded checks if the user specified contrasts are a variation of effect coding scheme
+      is.effect.coded <- function(coding_matrix){
+        #if a contrast with only one column is used it must be converted to a matrix
+        if (class(coding_matrix) == "numeric"){
+          coding_matrix <- as.matrix(coding_matrix)
+        }
+        n = dim(coding_matrix)[1]
+        k = dim(coding_matrix)[2]
+        
+        default_contrasts = contr.sum(n)
+        #check if there is the same number of regressor in the coding schemes
+        if (ncol(default_contrasts) == k){
+          #check if the contrast is exactly the same as default
+          if (all(default_contrasts == coding_matrix)){
+            return(T)
+          } else {
+            #check if all elements in the matrices are the same
+            condition2 = all(sort(default_contrasts) == sort(coding_matrix))
+            #columns sum up to zero
+            condition3 = all(colSums(coding_matrix) == 0)
+            #the same level must be considered as a reference 
+            condition4 = sum(rowSums(coding_matrix == -1) == k) == 1
+            #only one row should sum to k (the reference row)
+            condition5 = sum(abs(rowSums(coding_matrix)) == k) == 1
+            if (condition2 && condition3 && condition4 && condition5){
+              return(T)
+            }
+          }
+        }
+        return(F)
+      }
+      
+      # fill in the results
       result_table <- matrix(NA, nrow = n_cases, ncol = ncol(table))
-      # print(result_table)
       result_table <- table
-      # print(result_table)
+  
       Q_1 <-  paste0(" Quantile ",  min(quantiles))
       Q_2 <-  paste0(" Quantile ",  max(quantiles))
       colnames(result_table) <- c("    Simple effect", "        SD", Q_1, Q_2, "  p-value")
       colnames_return_table <- c("Simple effect", "SD",  paste0("Quantile ",  min(quantiles)),
                                  paste0("Quantile ",  max(quantiles)), "p-value")
       
-      #fill in the level indices
-      index_table <- matrix(NA, nrow = nrow(effect_matrix), ncol = n_selected_vars)
-      colnames(index_table) <- c(base, non_base_vars_names)
-      index_table           <- matrix(as.factor(level_index[,colnames(index_table)]), ncol = n_selected_vars)
-      colnames(index_table) <- c(base, non_base_vars_names)
+      # fill in the level indices
+      index_table_names <- list(NULL, c(base, non_base_vars_names))
+      index_table       <- matrix(NA, nrow = nrow(effect_matrix), ncol = n_selected_vars,
+                                  dimnames = index_table_names)
+
+      # if user defines contrasts differnt labeling is used
+      # the last level of the variable must be skipped from the table, as it is not meaningful
+      contrasts <- BANOVA_output$contrast
+      if (!is.null(contrasts)){
+        variables_with_contrasts <- names(contrasts)
+        index_table              <- matrix(as.factor(level_index[, index_table_names]), 
+                                           ncol = n_selected_vars, dimnames = index_table_names)
+        # update default index_table for the variables with user defined contrasts
+        for (var in variables_with_contrasts){
+          if (var %in% index_table_names){
+            if (!is.effect.coded(contrasts[[var]])){
+              index_table[, var] <- matrix(as.factor(level_index_strings[, var]), ncol = length(var),
+                                           dimnames = list(NULL, var))
+              remove_last_level  <- TRUE
+            }
+          }
+        }
+      } else { #default index_table
+        index_table           <- matrix(as.factor(level_index[, index_table_names]), ncol = n_selected_vars,
+                                        dimnames = index_table_names)
+      }
       
-      #combine tables
+      # combine tables
       result <- cbind(index_table, result_table)
       rownames(result) <- rep('', n_cases)
+      
+      # drop last levelif user defines contrasts
+      if (remove_last_level){
+        for (var in variables_with_contrasts){
+          if (var %in% colnames(index_table)){
+            levels_factor <- unique(index_table[,var])
+            last_level    <- levels_factor[length(levels_factor)]
+            result <- result[result[, var] != last_level,]
+          }
+        }
+      }
       return(list(result = result, colnames_return_table = colnames_return_table))
     }
     
+    ##### Main calculation ####
     var_names          <- attr(design_matrix, "varNames")
     var_interactions   <- attr(design_matrix, "interactions")
     var_classes        <- attr(design_matrix, "dataClasses")
@@ -229,16 +291,17 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
     var_values         <- attr(design_matrix, "varValues")
     var_index          <- c(1:(length(var_names)))
     
+    # check if the base variable is in the model
     if (!(base %in% var_names)){
       stop("The specified base variable is not in the model. Please check the base argument.")
     }
   
-    #check the classes of interacting variables 
+    # check the classes of interacting variables 
     if (var_classes[base] != "factor"){
       stop("Base variable must be a factor")
     }
     
-    #check if there are interactions between factor variables
+    # check if there are interactions between factor variables
     if (length(var_interactions) == 0){
       stop("There are no interactions between factor variables.")
     } else {
@@ -251,11 +314,11 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
       }
     }
     
-    #find base variables and indices of it's levels
+    # find base variables and indices of it's levels
     base_index        <- var_index[var_names == base]
     base_levels_names <- names_regressors[var_levels_index == base_index]
     
-    #find which variables base interacts with
+    # find which variables base interacts with
     base_interactions <- c()
     for (i in 1:length(var_interactions)){
       interaction <- var_interactions[[i]]
@@ -263,11 +326,11 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
         base_interactions <- c(base_interactions, i)
       }
     }
-    
     if(return_posterior_samples){
       simple_effect_return <- list()
     }
-    #for each combination of interactions with the base variable
+    
+    # for each combination of interactions (block) with the base variable
     for(block in base_interactions){
       
       selected_vars        <- var_interactions[[block]] # variables in the interaction
@@ -275,37 +338,51 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
       n_selected_vars      <- length(selected_vars)     # number of variables included in an interaction
       n_non_base_vars      <- n_selected_vars-1         # number of non-base variables
       
-      #obtain effect matrix with intercept, regressors of the interacting variables, and thier interactions
+      # obtain effect matrix with intercept, regressors of the interacting variables, and thier interactions
       effect_matrix <- effect.matrix.interaction(interaction_factors = selected_vars_values, assign = var_levels_index, 
                                                    selected_vars, index_inter_factor = interactions_index[block], 
                                                    numeric_index = attr(design_matrix, 'numeric_index'), 
-                                                   contrast = BANOVA_output$contrast) 
+                                                   contrast = NULL) 
       
-      n_cases        <- nrow(effect_matrix) #number of possible combinations of caseses
+      n_cases        <- nrow(effect_matrix) # number of possible combinations of caseses
       
-      #order the effect matrix
-      level_index         <- attr(effect_matrix,"levels") #combinations of levels in the effect matrix
-      non_base_vars_names <- colnames(level_index)[colnames(level_index) != base]
-
-      base_order  <- order(level_index[, base])#, decreasing = T) #order of the base variable (for a two way interaction)
-
-      temp_index         <- level_index
+      # order the effect matrix
+      level_index         <- attr(effect_matrix,"levels")   # combinations of levels in the effect matrix
+      vars_names          <- colnames(level_index)          # names of selected variables
+      non_base_vars_names <- vars_names[vars_names != base] # names of selected non-base variables 
+      
+      # create a level_index tables with string labels (as is in the BANOVA.run: var_name1, var_name2,...)
+      level_index_strings <- level_index
+      for (i in 1:ncol(level_index_strings)){
+        factor_levels <- unique(level_index_strings[,i])
+        num_levels    <- length(factor_levels)
+        for (j in 1:num_levels){
+          level_index_strings[,i][level_index_strings[,i] == factor_levels[j]] <-  paste0(vars_names[i], j)
+        }
+      }
+      
+      #order of the base variable (for a two way interaction)
+      base_order  <- order(level_index_strings[, base])
+      
+      temp_index         <- level_index_strings
+      level_index_temp   <- level_index
       effect_matrix_temp <- effect_matrix
-
       if (n_non_base_vars != 1){
         #first order in the non base variables if there are more than one of them
         for (i in 0:(n_non_base_vars-1)){
           order_index <- order(temp_index[, non_base_vars_names[n_non_base_vars-i]])
           temp_index  <- temp_index[order_index, ]
-          effect_matrix_temp <- effect_matrix_temp[order_index, ]
-          #level_index        <- temp_index[order_index, ]
+          
+          effect_matrix_temp    <- effect_matrix_temp[order_index, ]
+          level_index_temp      <- level_index_temp[order_index, ]
+          level_index_strings <- level_index_strings[order_index, ]
         }
-        base_order      <- order(temp_index[ ,base])
+        base_order <- order(temp_index[ ,base])
       }
-
       #order the effect matrix on the base variable
       effect_matrix <- effect_matrix_temp[base_order, ]
-      level_index   <- temp_index[base_order, ]
+      level_index   <- level_index_temp[base_order, ]
+      level_index_strings <- level_index_strings[base_order, ]
 
       #intercept and the levels of the base variable should not be included in the simple effects
       effect_matrix[, intercept_name]    <- 0
@@ -313,12 +390,11 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
       
       coef_temp      <- coefficients[, colnames(effect_matrix)] #coefficients of relevant regressors
 
-      table          <- matrix(NA, nrow = n_cases, ncol = 5)
-      
       if(return_posterior_samples){
         simple_effect_samlpes <- matrix(NA, nrow = nrow(coefficients), ncol = n_cases)
       }
       
+      table <- matrix(NA, nrow = n_cases, ncol = 5)
       for (j in 1:n_cases){
         simple_effects <- coef_temp %*% (effect_matrix[j,]) 
         
@@ -336,25 +412,22 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
         }
         
       }
+      # Format the tables
       table <- format(round(table, 4), nsmall = 4)
-      
-      
       title <- build.title()
       create_table_result <- create.table()
-      
       table <- create_table_result$result
       return_table <- data.frame(table)
-      
       table <- as.table(table)
       table[, ncol(table)][table[, ncol(table)] == " 0.0000"] = "<0.0001"
       
-      #print results 
+      # Print results 
       cat('\n')
       cat(title)
       cat('\n\n')
       print(table, right=T, digits = 4) 
       
-      #Prepare values to be returned
+      # Prepare values to be returned
       var_names <- names(selected_vars)
       n_vars    <- length(var_names)
       
