@@ -1,10 +1,10 @@
 #' Simple effects calculation
-#'
+#' 
 #' \code{BANOVA.simple} calculates simple or partial effects, also known as simple main effects in a
 #' model with more than one interacting factors. One variable must be selected as a moderating (or base) 
 #' factor. Both single-level and multi-level models with any of the distributions accommodated in the package can be analyzed. 
-#' @usage simple_effects <- BANOVA.simple(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975), 
-#'                                 dep_var_name = NULL, return_posterior_samples = FALSE)
+#' @usage BANOVA.simple(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975), 
+#' dep_var_name = NULL, return_posterior_samples = FALSE)
 #' @param BANOVA_output an object of class "BANOVA" returned by BANOVA.run function with 
 #' an outcome of the Hierarchical Bayesian ANOVA analysis
 #' @param base a character string which specifies the name of the mediator variable used as a base 
@@ -46,20 +46,21 @@
 #' coefficients and thus simple effects are reported for each possible choice outcome. To perform the 
 #' calculation for a Multinomial model an additional argument \code{dep_var_name} with a name of the 
 #' dependent variable must be specified.
-
 #' @examples 
-#' # Use the ipadstudy data set
-#' data(ipadstudy)
+#' # Use the colorad data set
+#' data(colorad)
+#' \donttest{
 #' # Build and analyze the model
-#' model <- BANOVA.model('Normal', single_level = TRUE)
+#' model <- BANOVA.model('Binomial')
 #' banova_model <- BANOVA.build(model)
-#' res_1 <- BANOVA.run(attitude~owner + age + gender + selfbrand*conspic, 
-#'                     fit = banova_model, data = ipadstudy, id = 'id', 
+#' res_1 <- BANOVA.run(y ~ typic, ~ color*blurfac, fit = banova_model,
+#'                     data = colorad, id = 'id', num_trials = as.integer(16), 
 #'                     iter = 2000, thin = 5, chains = 2)
-#' # Calculate simple effects with "conspic" as a moderating vriable
-#' simple_effects <- BANOVA.simple(BANOVA_output = res_1, base = "conspic")
+#' # Calculate simple effects with "blurfac" as a moderating vriable
+#' simple_effects <- BANOVA.simple(BANOVA_output = res_1, base = "blurfac")
+#' }
 #' @export
-BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975), dep_var_name = NULL, 
+BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025, 0.975), dep_var_name = NULL, 
                           return_posterior_samples = FALSE){
 
   check.quantiles <- function(){
@@ -238,16 +239,16 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
                                  paste0("Quantile ",  max(quantiles)), "p-value")
       
       # fill in the level indices
-      index_table_names <- list(NULL, c(base, non_base_vars_names))
+      index_table_names <- list(NULL, colnames = c(base, non_base_vars_names))
       index_table       <- matrix(NA, nrow = nrow(effect_matrix), ncol = n_selected_vars,
                                   dimnames = index_table_names)
 
-      # if user defines contrasts differnt labeling is used
+      # if user defines contrasts different labelling is used
       # the last level of the variable must be skipped from the table, as it is not meaningful
       contrasts <- BANOVA_output$contrast
       if (!is.null(contrasts)){
         variables_with_contrasts <- names(contrasts)
-        index_table              <- matrix(as.factor(level_index[, index_table_names]), 
+        index_table              <- matrix(as.factor(level_index[, index_table_names[[2]]]), 
                                            ncol = n_selected_vars, dimnames = index_table_names)
         # update default index_table for the variables with user defined contrasts
         for (var in variables_with_contrasts){
@@ -260,7 +261,7 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
           }
         }
       } else { #default index_table
-        index_table           <- matrix(as.factor(level_index[, index_table_names]), ncol = n_selected_vars,
+        index_table           <- matrix(as.factor(level_index[, index_table_names[[2]]]), ncol = n_selected_vars,
                                         dimnames = index_table_names)
       }
       
@@ -481,7 +482,7 @@ BANOVA.simple <- function(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975
       # for a single level model design matrix is extracted from BANOVA_output
       single_level_multinomial = TRUE
       
-      design_matrix    <- res_M_S$dMatrice$X_full[[1]]
+      design_matrix    <- BANOVA_output$dMatrice$X_full[[1]]
       names_regressors <- colnames(design_matrix)
       
       coefficients           <- BANOVA_output$samples_l1_param #select semples of the lvl1 parameters

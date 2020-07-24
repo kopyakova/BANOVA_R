@@ -30,7 +30,7 @@ BANOVA.run <- function (l1_formula = 'NA',
     effect_condition <- sum(levels) == 0
     if (effect_condition || dummy_condition){
       #if factors are effect or dummy coded, levels count from the postive to negative values, 
-      # so (1, 0, -1) or (1, 0), where "1" is level 1, "9" is level 2, and "-1" is level three
+      # so (1, 0, -1) or (1, 0), where "1" is level 1, "0" is level 2, and "-1" is level 3
       lvl <- as.numeric(sort(levels, decreasing = T))
       data_vec <- factor(data_vec, levels = lvl, labels = lvl)
     } else {

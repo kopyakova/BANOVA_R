@@ -4,8 +4,8 @@
 \alias{BANOVA.simple}
 \title{Simple effects calculation}
 \usage{
-simple_effects <- BANOVA.simple(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975), 
-                                dep_var_name = NULL, return_posterior_samples = FALSE)
+BANOVA.simple(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975), 
+dep_var_name = NULL, return_posterior_samples = FALSE)
 }
 \arguments{
 \item{BANOVA_output}{an object of class "BANOVA" returned by BANOVA.run function with 
@@ -59,14 +59,16 @@ calculation for a Multinomial model an additional argument \code{dep_var_name} w
 dependent variable must be specified.
 }
 \examples{
-# Use the ipadstudy data set
-data(ipadstudy)
+# Use the colorad data set
+data(colorad)
+\donttest{
 # Build and analyze the model
-model <- BANOVA.model('Normal', single_level = TRUE)
+model <- BANOVA.model('Binomial')
 banova_model <- BANOVA.build(model)
-res_1 <- BANOVA.run(attitude~owner + age + gender + selfbrand*conspic, 
-                    fit = banova_model, data = ipadstudy, id = 'id', 
+res_1 <- BANOVA.run(y ~ typic, ~ color*blurfac, fit = banova_model,
+                    data = colorad, id = 'id', num_trials = as.integer(16), 
                     iter = 2000, thin = 5, chains = 2)
-# Calculate simple effects with "conspic" as a moderating vriable
-simple_effects <- BANOVA.simple(BANOVA_output = res_1, base = "conspic")
+# Calculate simple effects with "blurfac" as a moderating vriable
+simple_effects <- BANOVA.simple(BANOVA_output = res_1, base = "blurfac")
+}
 }
