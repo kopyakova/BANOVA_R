@@ -2,7 +2,7 @@
 \alias{pairs.BANOVA}
 \title{Create a matrix of output plots from a \code{BANOVA} object} 
 \description{
-A \code{\link[graphics:pairs]{pairs}} 
+A \code{\link[=graphics]{pairs}} 
 method that is customized for MCMC output.
 }
 \usage{
