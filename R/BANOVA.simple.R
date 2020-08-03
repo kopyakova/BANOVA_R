@@ -244,23 +244,25 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
                                   dimnames = index_table_names)
 
       # if user defines contrasts different labelling is used
-      # the last level of the variable must be skipped from the table, as it is not meaningful
+      # the unspecified levels of the variable must be skipped from the table, as it is not meaningful
       contrasts <- BANOVA_output$contrast
       if (!is.null(contrasts)){
         variables_with_contrasts <- names(contrasts)
-        index_table              <- matrix(as.factor(level_index[, index_table_names[[2]]]), 
+        index_table              <- matrix(as.factor(level_index[, index_table_names[["colnames"]]]), 
                                            ncol = n_selected_vars, dimnames = index_table_names)
-        # update default index_table for the variables with user defined contrasts
+        # update default index_table for the variables with user defined contrasts 
         for (var in variables_with_contrasts){
-          if (var %in% index_table_names){
+          if (var %in% index_table_names[["colnames"]]){
             if (!is.effect.coded(contrasts[[var]])){
+              # level labels in the table are strins with variable name and regressor number
               index_table[, var] <- matrix(as.factor(level_index_strings[, var]), ncol = length(var),
                                            dimnames = list(NULL, var))
               remove_last_level  <- TRUE
             }
           }
         }
-      } else { #default index_table
+      } else { 
+        #default index_table
         index_table           <- matrix(as.factor(level_index[, index_table_names[[2]]]), ncol = n_selected_vars,
                                         dimnames = index_table_names)
       }
@@ -269,13 +271,16 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       result <- cbind(index_table, result_table)
       rownames(result) <- rep('', n_cases)
       
-      # drop last levelif user defines contrasts
+      # drop last level(s) if user defines contrasts
       if (remove_last_level){
         for (var in variables_with_contrasts){
           if (var %in% colnames(index_table)){
-            levels_factor <- unique(index_table[,var])
-            last_level    <- levels_factor[length(levels_factor)]
-            result <- result[result[, var] != last_level,]
+            levels_factor <- unique(index_table[, var])
+            n_contrasts   <- dim(as.matrix(contrasts[[var]]))[2]
+            last_levels   <- levels_factor[(n_contrasts+1):length(levels_factor)]
+            for (level in last_levels){
+              result <- result[result[, var] != level,]
+            }
           }
         }
       }
@@ -352,6 +357,13 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       vars_names          <- colnames(level_index)          # names of selected variables
       non_base_vars_names <- vars_names[vars_names != base] # names of selected non-base variables 
       
+      if(!is.null(BANOVA_output$contrast)){
+        # if user defines contrasts then it might be that a different number of regressors are analyzed
+        # remove columns of effect matrix that correspond to non existing coefficients
+        keep_columns  <- intersect(colnames(coefficients), colnames(effect_matrix))
+        effect_matrix <- effect_matrix[,keep_columns]
+      }
+  
       # create a level_index tables with string labels (as is in the BANOVA.run: var_name1, var_name2,...)
       level_index_strings <- level_index
       for (i in 1:ncol(level_index_strings)){
