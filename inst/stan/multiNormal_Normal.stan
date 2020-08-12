@@ -27,7 +27,7 @@ transformed parameters {
   vector[L] y_hat[N];              // means for the distribution in y
   matrix[L, J] mu_beta1[M];        // means of elements in beta1
   vector[L] y_pred[N];             // predictions for the dependent variables in y
-  matrix[L, L] L_Sigma;            // covariance matrix
+  matrix[L, L] L_Sigma;            // element of choleski decomposition of the covariance matrix
   matrix<lower=0>[L, J] tau_beta1; // standard deviation for beta1
   
   for (n in 1:N) {
@@ -39,16 +39,16 @@ transformed parameters {
   for (m in 1:M){
     for (j in 1:J){
        for (l in 1:L){
-         mu_beta1[m, l, j] = dot_product(Z[m], beta2[l,1:K,j]);
+         mu_beta1[m, l, j] = dot_product(Z[m], beta2[l, 1:K, j]);
       }
     }
   } 
   
   for (n in 1:N) {
-     for (l in 1:L) {
-       y_pred[n, l] = dot_product(X[n], mu_beta1[id[n],l]);
-     }
-   }
+    for (l in 1:L) {
+      y_pred[n, l] = dot_product(X[n], mu_beta1[id[n],l]);
+    }
+  }
 
   L_Sigma = diag_pre_multiply(L_sigma, L_Omega);
   
@@ -59,14 +59,12 @@ transformed parameters {
 model {
   // Priors 
   for (m in 1:M){
-    //to_vector(beta1[m]) ~ normal(to_vector(mu_beta1[m]), to_vector(tau_beta1));
     for (j in 1:J){
        for (l in 1:L){
          beta1[m, l, j] ~ normal(mu_beta1[m, l, j], tau_beta1[l,j]);
       }
     }
   }
-  
   L_Omega ~ lkj_corr_cholesky(1);
   L_sigma ~ cauchy(0, 2.5);
   to_vector(tau_beta1Sq) ~ inv_gamma(1, 1);
@@ -80,6 +78,7 @@ model {
   }
 }
 
+
 generated quantities {
   real r_2[L];
   matrix[L, L] Omega; // Correlation matrix
@@ -88,6 +87,6 @@ generated quantities {
   Omega = multiply_lower_tri_self_transpose(L_Omega);
   Sigma = quad_form_diag(Omega, L_sigma); 
   for (l in 1:L){
-    r_2[l] =  variance(y_pred[,l])/(variance(y_hat[,l]) + Sigma[l,l]); 
+    r_2[l] =  variance(y_pred[1:N, l])/(variance(y_hat[1:N, l]) + Sigma[l,l]); 
   }
 }
