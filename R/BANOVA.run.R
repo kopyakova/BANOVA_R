@@ -576,8 +576,8 @@ BANOVA.run <- function (l1_formula = 'NA',
                   correlation.matrix = mlvResult$correlation.matrix,
                   covariance.matrix = mlvResult$covariance.matrix,
                   dMatrice = dMatrice, 
-                  samples_l1_param = mlvResult$samples_l1.list,
-                  samples_l2_param = mlvResult$samples_l2.list, 
+                  samples_l1_param = mlvResult$combined.samples.l1,
+                  samples_l2_param = mlvResult$combined.samples.l2, 
                   #samples_l2_sigma_param = NA,
                   samples_cutp_param = array(dim = 0),
                   data = data, 
@@ -592,7 +592,15 @@ BANOVA.run <- function (l1_formula = 'NA',
                   model_name = paste('BANOVA', model_name, sep = "."),
                   contrast = contrast,
                   new_id = new_id,
-                  old_id = old_id)
+                  old_id = old_id,
+                  samples_l1.list = mlvResult$samples_l1.list,
+                  samples_l2.list = mlvResult$samples_l2.list,
+                  anova.tables.list = mlvResult$anova.tables.list,
+                  coef.tables.list = mlvResult$coef.tables.list,
+                  pvalue.tables.list = mlvResult$pvalue.tables.list,
+                  conv.list = mlvResult$conv.list,
+                  num_depenent_variables = mlvResult$num_depenent_variables,
+                  names_of_dependent_variables = mlvResult$names_of_dependent_variables)
     }
     sol$call <- match.call()
     class(sol) <- "BANOVA"

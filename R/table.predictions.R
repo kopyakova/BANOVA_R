@@ -134,6 +134,27 @@ function(x){
                                l2_values = attr(x$dMatrice$Z, 'varValues'), l2_interactions = attr(x$dMatrice$Z, 'interactions'), 
                                l2_interactions_index = attr(x$dMatrice$Z, 'interactions_index'), numeric_index_in_X = attr(x$dMatrice$X_full[[1]], 'numeric_index'),
                                numeric_index_in_Z = attr(x$dMatrice$Z, 'numeric_index'), contrast = x$contrast)
+    } else if (x$model_name == 'BANOVA.multiNormal'){
+      sol_tables <- list()
+      for (i in 1:x$num_depenent_variables){
+        name <- x$names_of_dependent_variables[i]
+        title <- paste0("\nPredictions for ", name,"\n")
+        cat(title)
+        sol_tables[[title]] <- print.table.means(x$coef.tables.list[[i]]$coeff_table, x$samples_l2.list[[i]], 
+                                        colnames(x$dMatrice$X), X_assign = attr(x$dMatrice$X, 'assign'), 
+                                        X_classes = attr(x$dMatrice$X, 'dataClasses'), 
+                                        colnames(x$dMatrice$Z), Z_assign = attr(x$dMatrice$Z, 'assign'), 
+                                        Z_classes = attr(x$dMatrice$Z, 'dataClasses'), 
+                                        l1_values = attr(x$dMatrice$X, 'varValues'), 
+                                        l1_interactions = attr(x$dMatrice$X, 'interactions'), 
+                                        l1_interactions_index = attr(x$dMatrice$X, 'interactions_index'), 
+                                        l2_values = attr(x$dMatrice$Z, 'varValues'), 
+                                        l2_interactions = attr(x$dMatrice$Z, 'interactions'), 
+                                        l2_interactions_index = attr(x$dMatrice$Z, 'interactions_index'), 
+                                        numeric_index_in_X = attr(x$dMatrice$X, 'numeric_index'),
+                                        numeric_index_in_Z = attr(x$dMatrice$Z, 'numeric_index'), 
+                                        model = 'NormalNormal', contrast = x$contrast)
+      }
     }
   }
   invisible(sol_tables)
