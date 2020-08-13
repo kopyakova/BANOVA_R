@@ -1,6 +1,6 @@
 results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
   combine.tables <- function(list_with_tables, list_names_first = T, list_elements_length = 1,
-                             anova = F){
+                             anova = F, conv = F){
     combine <- function(list_with_tables, element_name = "NA"){
       row_names <- rownames(list_with_tables[[1]])
       col_names <- colnames(list_with_tables[[1]])
@@ -77,6 +77,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
       }
       if (anova){
         class(combined_tables) <- "ancova.effect"
+      } else if (conv){
+        class(combined_tables) <- "conv.diag"
       }
     }
     return(combined_tables)
@@ -144,7 +146,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
   if (!is.null(Sigma_samples)){
     Sigma <- colMeans(Sigma_samples)
     tau_ySq <- diag(Sigma)           # Vector with variances for dep vars
-    Sigma <- as.data.frame(Sigma, row.names = dep_var_names) 
+    Sigma <- as.data.frame(round(Sigma, digits = 4), row.names = dep_var_names) 
     colnames(Sigma) <- dep_var_names
   }
   
@@ -153,7 +155,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
   Omega_samples <- fit_beta$Omega
   if (!is.null(Omega_samples)){
     Omega <- colMeans(Omega_samples)
-    Omega <- as.data.frame(Omega, row.names = dep_var_names)
+    Omega <- as.data.frame(round(Omega, digits = 4), row.names = dep_var_names)
     colnames(Omega) <- dep_var_names
   }
   
@@ -201,7 +203,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
   combined.anova  <- combine.tables(anova.tables.list, T, 2, anova = T)
   combined.coef   <- combine.tables(coef.tables.list, T, 3)
   combined.pvalue <- combine.tables(pvalue.tables.list, T, 1)
-  combined.conv   <- combine.tables(conv.list, T, 2)
+  combined.conv   <- combine.tables(conv.list, T, 3, conv = T)
   
   combined.samples.l1 <- combine.samples(samples_l1.list)
   combined.samples.l2 <- combine.samples(samples_l2.list)

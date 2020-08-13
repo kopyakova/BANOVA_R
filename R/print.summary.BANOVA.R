@@ -24,7 +24,7 @@ print.summary.BANOVA <- function(x, ...){
     cat('\nMultiple R-squared: ', x$R2, '\n')
   }
   
-  if (x$model_name == "BANOVA.Multinomial"){
+  if (x$model_name == "BANOVA.multiNormal"){
     cat('\nCorrelation matrix: \n')
     print(x$full_object$correlation.matrix)
   }
