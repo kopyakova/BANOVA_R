@@ -1,4 +1,4 @@
-results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
+results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_level = F){
   combine.tables <- function(list_with_tables, list_names_first = T, list_elements_length = 1,
                              anova = F, conv = F){
     combine <- function(list_with_tables, element_name = "NA"){
@@ -104,33 +104,12 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
     
   }
   
+  y <- dMatrice$y
   X <- dMatrice$X
   Z <- dMatrice$Z
   X_names <- colnames(X)
   Z_names <- colnames(Z)
   
-  ##### Extract first and second level coefficients ##### 
-  # Identify dimentsions
-  beta1_dim <- dim(fit_beta$beta1)
-  beta2_dim <- dim(fit_beta$beta2)
-  L = beta2_dim[2] # number of dependent variables
-  M = beta1_dim[2] # number of unique subjects
-  J = beta1_dim[4] # number of subject-level effects (1st level)
-  K = beta2_dim[3] # number of population-level effects (2nd level)
-  n_iter =  beta1_dim[1] # number MCMC iterations / number of samples
-  # Prepare names of the coefficients 
-  beta1_names <- c()
-  for (i in 1:J){
-    for (j in 1:M){
-      beta1_names <- c(beta1_names, paste("beta1_",i,"_",j, sep = ""))
-    }
-  }
-  beta2_names <- c()
-  for (i in 1:J){
-    for (j in 1:K){
-      beta2_names <- c(beta2_names, paste("beta2_",i,"_",j, sep = ""))
-    }
-  }
   ##### 
   #Extract R2 
   R2 = NULL
@@ -159,45 +138,119 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
     colnames(Omega) <- dep_var_names
   }
   
-  ##### Prepare results for each of L dependent variables ##### 
-  samples_l1.list    <- list()
-  samples_l2.list    <- list()
-  anova.tables.list  <- list()
-  coef.tables.list   <- list()
-  pvalue.tables.list <- list()
-  conv.list          <- list()
-  cat('Constructing ANOVA/ANCOVA tables...\n')
-  for (l in 1:L){
-    dep_var_name <- dep_var_names[l] #column name of the l_th dependent variable
+  ##### Extract first and second level coefficients ##### 
+  if (single_level){
+
+    samples_l2_param <- NULL
+    # Identify dimentsions
+    beta1_dim <- dim(fit_beta$beta1)
     
-    # Reformat level one and level two coefficient samples sample of the l_th dependent variable
-    samples_l1_param <- array(0, dim = c(n_iter, J*M), dimnames = list(NULL, beta1_names))
+    L = beta1_dim[2] # number of dependent variables
+    J = beta1_dim[3] # number of subject-level effects (1st level)
+    n_iter =  beta1_dim[1] # number MCMC iterations / number of samples
+    
+    # Prepare names of the coefficients 
+    beta1_names <- c()
+    for (i in 1:J) 
+      beta1_names <- c(beta1_names, paste("beta1_",i, sep = ""))
+    
+    ##### Prepare results for each of L dependent variables ##### 
+    samples_l1.list    <- list()
+    samples_l2.list    <- NULL
+    anova.tables.list  <- list()
+    coef.tables.list   <- list()
+    pvalue.tables.list <- list()
+    conv.list          <- list()
+    cat('Constructing ANOVA/ANCOVA tables...\n')
+    for (l in 1:L){
+      dep_var_name <- dep_var_names[l] #column name of the l_th dependent variable
+      
+      # Reformat level one coefficient samples sample of the l_th dependent variable
+      samples_l1_param <- array(0, dim = c(n_iter, J), dimnames = list(NULL, beta1_names))
+      for (i in 1:J){
+        samples_l1_param[, i] <- fit_beta$beta1[, l, i]
+      }
+      samples_l1.list[[dep_var_name]] <- samples_l1_param
+      
+      # Result tables for of the l_th dependent variable
+      anova.tables.list[[dep_var_name]] <- table.ANCOVA(samples_l2_param, Z, X, samples_l1_param, 
+                                                                       array(y[,l], dim = c(length(y[,l]), 1)), 
+                                                                       model = model_name)
+        
+      coef.tables.list[[dep_var_name]]  <- table.coefficients(samples_l1_param, beta1_names, 
+                                                              Z_names, X_names, attr(Z, 'assign') + 1, 
+                                                              attr(X, 'assign') + 1)
+  
+      pvalue.tables.list[[dep_var_name]] <- table.pvalue(coef.tables.list[[dep_var_name]]$coeff_table, 
+                                                         coef.tables.list[[dep_var_name]]$row_indices, 
+                                                         l1_names = Z_names, l2_names = X_names)
+      
+      conv.list[[dep_var_name]]          <- conv.geweke.heidel(samples_l1_param, Z_names, X_names)
+      class(conv.list[[dep_var_name]]) <- 'conv.diag'
+    }
+    combined.samples.l2 <- NULL
+  } else {
+    # Identify dimentsions
+    beta1_dim <- dim(fit_beta$beta1)
+    beta2_dim <- dim(fit_beta$beta2)
+    L = beta2_dim[2] # number of dependent variables
+    M = beta1_dim[2] # number of unique subjects
+    J = beta1_dim[4] # number of subject-level effects (1st level)
+    K = beta2_dim[3] # number of population-level effects (2nd level)
+    n_iter =  beta1_dim[1] # number MCMC iterations / number of samples
+    # Prepare names of the coefficients 
+    beta1_names <- c()
     for (i in 1:J){
       for (j in 1:M){
-        samples_l1_param[, (i-1) * M + j] <- fit_beta$beta1[, j, l, i]
+        beta1_names <- c(beta1_names, paste("beta1_",i,"_",j, sep = ""))
       }
     }
-    samples_l2_param <- array(0, dim = c(n_iter, K*J), dimnames = list(NULL, beta2_names))
+    beta2_names <- c()
     for (i in 1:J){
       for (j in 1:K){
-        samples_l2_param[, (i-1) * K + j] <- fit_beta$beta2[, l, j, i]
+        beta2_names <- c(beta2_names, paste("beta2_",i,"_",j, sep = ""))
       }
     }
-    samples_l1.list[[dep_var_name]] <- samples_l1_param
-    samples_l2.list[[dep_var_name]] <- samples_l2_param
-    # Result tables for of the l_th dependent variable
-    anova.tables.list[[dep_var_name]] <- table.ANCOVA(samples_l1_param, X, Z, 
-                                                      samples_l2_param, l1_error = tau_ySq[l])
-    coef.tables.list[[dep_var_name]]  <- table.coefficients(samples_l2_param, beta2_names, 
-                                                            X_names, Z_names, attr(X, 'assign') + 1, 
-                                                            attr(Z, 'assign') + 1, 
-                                                            samples_cutp_param = array(dim = 0))
-    pvalue.tables.list[[dep_var_name]] <- table.pvalue(coef.tables.list[[dep_var_name]]$coeff_table, 
-                                                       coef.tables.list[[dep_var_name]]$row_indices, 
-                                                       l1_names = attr(X, 'varNames'), 
-                                                       l2_names = attr(Z, 'varNames'))
-    conv.list[[dep_var_name]]          <- conv.geweke.heidel(samples_l2_param, X_names, Z_names)
-    class(conv.list[[dep_var_name]]) <- 'conv.diag'
+    
+    ##### Prepare results for each of L dependent variables ##### 
+    samples_l1.list    <- list()
+    samples_l2.list    <- list()
+    anova.tables.list  <- list()
+    coef.tables.list   <- list()
+    pvalue.tables.list <- list()
+    conv.list          <- list()
+    cat('Constructing ANOVA/ANCOVA tables...\n')
+    for (l in 1:L){
+      dep_var_name <- dep_var_names[l] #column name of the l_th dependent variable
+      
+      # Reformat level one and level two coefficient samples sample of the l_th dependent variable
+      samples_l1_param <- array(0, dim = c(n_iter, J*M), dimnames = list(NULL, beta1_names))
+      for (i in 1:J){
+        for (j in 1:M){
+          samples_l1_param[, (i-1) * M + j] <- fit_beta$beta1[, j, l, i]
+        }
+      }
+      samples_l2_param <- array(0, dim = c(n_iter, K*J), dimnames = list(NULL, beta2_names))
+      for (i in 1:J){
+        for (j in 1:K){
+          samples_l2_param[, (i-1) * K + j] <- fit_beta$beta2[, l, j, i]
+        }
+      }
+      samples_l1.list[[dep_var_name]] <- samples_l1_param
+      samples_l2.list[[dep_var_name]] <- samples_l2_param
+      # Result tables for of the l_th dependent variable
+      anova.tables.list[[dep_var_name]] <- table.ANCOVA(samples_l1_param, X, Z, 
+                                                        samples_l2_param, l1_error = tau_ySq[l])
+      coef.tables.list[[dep_var_name]]  <- table.coefficients(samples_l2_param, beta2_names, 
+                                                              X_names, Z_names, attr(X, 'assign') + 1, 
+                                                              attr(Z, 'assign') + 1)
+      pvalue.tables.list[[dep_var_name]] <- table.pvalue(coef.tables.list[[dep_var_name]]$coeff_table, 
+                                                         coef.tables.list[[dep_var_name]]$row_indices, 
+                                                         l1_names = X_names, l2_names = Z_names)
+      conv.list[[dep_var_name]]          <- conv.geweke.heidel(samples_l2_param, X_names, Z_names)
+      class(conv.list[[dep_var_name]]) <- 'conv.diag'
+    }
+    combined.samples.l2 <- combine.samples(samples_l2.list)
   }
   ##### Combine the results #####
   combined.anova  <- combine.tables(anova.tables.list, T, 2, anova = T)
@@ -206,7 +259,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
   combined.conv   <- combine.tables(conv.list, T, 3, conv = T)
   
   combined.samples.l1 <- combine.samples(samples_l1.list)
-  combined.samples.l2 <- combine.samples(samples_l2.list)
+  
   cat('Done.\n')
   return(list(combined.anova = combined.anova,
               combined.coef = combined.coef, 

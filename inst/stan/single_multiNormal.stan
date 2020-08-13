@@ -1,6 +1,6 @@
 data {
   int<lower=0> N; // number of observations
-  int<lower=2> L; // number of dependent variables
+  int<lower=1> L; // number of dependent variables
   int<lower=0> J; // number of subject-level effects
 
   vector[J] X[N]; // array of size N which contains J-long vectors 
@@ -23,6 +23,7 @@ transformed parameters {
        y_hat[n, l] = dot_product(X[n], beta1[l]);
      }
    }
+   L_Sigma = diag_pre_multiply(L_sigma, L_Omega);
 }
 
 model {
