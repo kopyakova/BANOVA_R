@@ -142,8 +142,10 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
   Sigma   = NULL
   Sigma_samples <- fit_beta$Sigma
   if (!is.null(Sigma_samples)){
-    Sigma <- colMeans(Sigma_samples) # Covariane matrix
+    Sigma <- colMeans(Sigma_samples)
     tau_ySq <- diag(Sigma)           # Vector with variances for dep vars
+    Sigma <- as.data.frame(Sigma, row.names = dep_var_names) 
+    colnames(Sigma) <- dep_var_names
   }
   
   #Extract Omega (correlation matrix) and variances of y variables
@@ -151,6 +153,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
   Omega_samples <- fit_beta$Omega
   if (!is.null(Omega_samples)){
     Omega <- colMeans(Omega_samples)
+    Omega <- as.data.frame(Omega, row.names = dep_var_names)
+    colnames(Omega) <- dep_var_names
   }
   
   ##### Prepare results for each of L dependent variables ##### 
@@ -222,12 +226,12 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice){
               names_of_dependent_variables = dep_var_names))
 }
 
-source('~/BANOVA_R/R/table.ANCOVA.R', echo=F)
-source('~/BANOVA_R/R/table.coefficients.R', echo=F)
-source('~/BANOVA_R/R/table.pvalue.R', echo=F)
-source('~/BANOVA_R/R/pValues.R', echo=F)
-source('~/BANOVA_R/R/conv.geweke.heidel.R', echo=TRUE)
-source('~/BANOVA_R/R/effect.matrix.factor.R', echo=TRUE)
+# source('~/BANOVA_R/R/table.ANCOVA.R', echo=F)
+# source('~/BANOVA_R/R/table.coefficients.R', echo=F)
+# source('~/BANOVA_R/R/table.pvalue.R', echo=F)
+# source('~/BANOVA_R/R/pValues.R', echo=F)
+# source('~/BANOVA_R/R/conv.geweke.heidel.R', echo=TRUE)
+# source('~/BANOVA_R/R/effect.matrix.factor.R', echo=TRUE)
 
 
 # > class(anova.tables.list[[dep_var_name]]$ancova_table)
