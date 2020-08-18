@@ -1,5 +1,4 @@
 print.BANOVA.floodlight <- 
-  #x <- sol_tables
   function(x, ...){
     floodlight.printing <- function(x){
       for(i in 1:length(x$sol)){
@@ -24,7 +23,7 @@ print.BANOVA.floodlight <-
     }
     if (is.null(x$sol)){
       #this is the case for multivariate models
-      dep_var_names <- names(sol_tables)
+      dep_var_names <- names(x)
       for (name in dep_var_names){
         x_temp <- x[[name]]
         title <- paste0("\nFloodlight analysis for ", name,"\n")
