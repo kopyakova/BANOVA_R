@@ -1,14 +1,31 @@
 results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_level = F){
+  #' This function combines tables for the multivariate (normal) models. The results for multivariate 
+  #' models are first obtained for each individual dependent variable (in a for loop) and then is 
+  #' combined in this function.
+  #' @param list_with_tables list with tables to be combined. Each element in the list is expected 
+  #' to have a name of the corresponding dependent variabel (for example "y1", "y2", etc). 
+  #' list_with_tables[["y1"]] is expected to have one or more elemnts which are matrices or data frames
+  #' @param list_names_first logical. If TRUE the rownames of tables have the names of dependent 
+  #' variables first, followed by default rownames (for example "y1 (Intercept)"). 
+  #' If FLASE default rownames are followed by variable names  (for example "(Intercept) y1")
+  #' @param list_elements_length numeric. how many elemnts are in each list (must be the same for all dep vars)
+  #' @param anova logical. Used to assign a class of the tables
+  #' @param conv logical. Used to assign a class of the tables
   combine.tables <- function(list_with_tables, list_names_first = T, list_elements_length = 1,
-                             anova = F, conv = F){
+                                       anova = F, conv = F){
     combine <- function(list_with_tables, element_name = "NA"){
       row_names <- rownames(list_with_tables[[1]])
       col_names <- colnames(list_with_tables[[1]])
       
       if(is.null(row_names)){
         if (is.null(dim(list_with_tables[[1]]))){
-          row_names = " "
-          col_names = " "
+          if (length(list_with_tables[[1]]) != 1){
+            row_names = " "
+            col_names = rep("", length(list_with_tables[[1]]))
+          } else {
+            row_names = " "
+            col_names = " "
+          }
         } else {
           dimensions <- dim(list_with_tables[[1]])
           row_names = c(1:dimensions[1])
@@ -33,7 +50,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
         dv_name <- list_names[i]
         combined_table[(1+n_row*(i-1)):(n_row+n_row*(i-1)),] <- as.matrix(list_with_tables[[dv_name]])
       }
-    
+      
       if (element_name == "pass_ind"){
         combined_table <- all(combined_table == TRUE) 
       } else if (element_name == "row_indices"){
@@ -44,7 +61,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
         colnames(combined_table) <- c(col_names)
         rownames(combined_table) <- new_row_names
       }
-   
+      
       return(combined_table)
     }
     
