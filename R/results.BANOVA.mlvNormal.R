@@ -19,34 +19,21 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
       n_row <- length(row_names)
       n_col <- length(col_names)
       
-      if(list_names_first){
-        first_vec  <- list_names
-        second_vec <- row_names
-      }else{
-        first_vec  <- row_names
-        second_vec <- list_names
-      }
       new_row_names <- c()
-      for (element in second_vec){
-        new_row_names <- c(new_row_names, format(paste0(first_vec, "  ", element)))
+      if(list_names_first){
+        for (element in list_names)
+          new_row_names <- c(new_row_names, format(paste0(element, " ", row_names)))
+      }else{
+        for (element in list_names)
+          new_row_names <- c(new_row_names, format(paste0(row_names, " ", element)))
       }
       
-      combined_table <- matrix(NA, nrow = length(row_names)*list_length, ncol = n_col)
-      if (list_names_first){
-        for (i in 1:list_length){
-          dv_name <- list_names[i]
-          combined_table[(1+n_row*(i-1)):(n_row+n_row*(i-1)),] <- as.matrix(list_with_tables[[dv_name]])
-        }
-      } else {
-        for (i in 1:list_length){
-          dv_name <- list_names[i]
-          matrix  <- as.matrix(list_with_tables[[dv_name]])
-          for (j in 1:n_row){
-            combined_table[1+(j-1)*list_length+(i-1),] <- matrix[j,]
-          }
-        }
+      combined_table <- matrix(NA, nrow = n_row*list_length, ncol = n_col)
+      for (i in 1:list_length){
+        dv_name <- list_names[i]
+        combined_table[(1+n_row*(i-1)):(n_row+n_row*(i-1)),] <- as.matrix(list_with_tables[[dv_name]])
       }
-      
+    
       if (element_name == "pass_ind"){
         combined_table <- all(combined_table == TRUE) 
       } else if (element_name == "row_indices"){
@@ -95,7 +82,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     for (i in 1:list_length){
       samples <- list_with_samples[[i]]
       combined_samples[, init_val:term_val] <- samples 
-      new_colnames <- c(new_colnames, paste0(colnames(samples), "_", list_names[i]))
+      new_colnames <- c(new_colnames, paste0(list_names[i], "_", colnames(samples)))
       init_val <- term_val + 1
       term_val <- n_col*(i+1)
     }
