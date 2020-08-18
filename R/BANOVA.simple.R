@@ -115,9 +115,9 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
   }
   
   # make.formula combines regressors in the fist and second levels of the two-level models into one
-  make.formula <- function(){
+  make.formula <- function(pvalue.table, dep_var){
     # select names of level one variables
-    l1_variables <- rownames(BANOVA_output$pvalue.table)
+    l1_variables <- rownames(pvalue.table)
     if (BANOVA_output$model_name == "BANOVA.Multinomial"){
       # For Multinomial models choice specific intercepts are skipped from a variable list
       l1_variables <- l1_variables[-c(1:(n_categories-1))]
@@ -131,7 +131,7 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
     }
 
     # select names of level two variables
-    l2_variables <- colnames(BANOVA_output$pvalue.table)
+    l2_variables <- colnames(pvalue.table)
     # if there is only the intercept keep an empty string
     if (length(l2_variables) == 1){
       l2_variables <- c()
@@ -140,11 +140,11 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       l2_variables <- l2_variables[which(l2_variables != intercept_name)]
     }
     
-    if (BANOVA_output$model_name == "BANOVA.Multinomial"){
-      dep_var     <- dep_var_name #must be specified by the user
-    } else {
-      dep_var     <- colnames(BANOVA_output$mf1)[1] # name of the dependent variable
-    }
+    # if (BANOVA_output$model_name == "BANOVA.Multinomial"){
+    #   dep_var     <- dep_var_name #must be specified by the user
+    # } else {
+    #   dep_var     <- colnames(BANOVA_output$mf1)[1] # name of the dependent variable
+    # }
     
     # combine the variables in a single string separated by "+"
     single_vars <-  paste0(c(l1_variables, l2_variables), collapse = " + ")
@@ -524,7 +524,7 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       data_temp <- cbind(l1_df, l2_vars, dep_var)
       
       # create a formula
-      formula        <- make.formula()
+      formula        <- make.formula(BANOVA_output$pvalue.table, dep_var_name)
       design_matrics <- design.matrix(l1_formula = formula, l2_formula = 'NA', data = data_temp, 
                                       contrast = BANOVA_output$contrast)
       design_matrix    <- design_matrics$X
@@ -559,9 +559,50 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
         cat('\n')
       }
     }
-  } 
+    
+  } else if (model_name == "BANOVA.multiNormal"){
+    intercept_name  <- colnames(BANOVA_output$pvalue.table)[1]  #how intercept is labeled
+    results <- list()
+    names_dv <- BANOVA_output$names_of_dependent_variables
+    if (BANOVA_output$single_level){
+      design_matrix    <- BANOVA_output$dMatrice$X
+      names_regressors <- colnames(design_matrix)
+      for (i in 1:BANOVA_output$num_depenent_variables){
+        name <- names_dv[i]
+        
+        coefficients           <- BANOVA_output$samples_l1.list[[i]] #select semples of the lvl1 parameters
+        colnames(coefficients) <- names_regressors
+
+        title <- paste0("\nSimple effects for ", name,"\n")
+        cat(title)
+        results[[name]] <- perform.calculation()
+      }
+    } else{
+      dep_var_label  <- colnames(BANOVA_output$mf1)[1]            #name of the matrix with dep vars
+      dep_var_matrix <- BANOVA_output$data[, dep_var_label]       #matrix with dep vars
+      combined_data  <- cbind(BANOVA_output$data, dep_var_matrix) #data set with y as a matrix and columns
+      design_matrics <- design.matrix(l1_formula = formula, l2_formula = 'NA', data = combined_data,
+                                      contrast = BANOVA_output$contrast)
+      design_matrix  <- design_matrics$X
+      
+      names_regressors <- colnames(design_matrix)
+      for (i in 1:BANOVA_output$num_depenent_variables){
+        name <- names_dv[i]
+        # for a two level model design matrix is created by "rewriting" two equations into one
+        formula <- make.formula(BANOVA_output$pvalue.tables.list[[i]],
+                                BANOVA_output$names_of_dependent_variables[[i]])
+        coefficients <- BANOVA_output$samples_l2.list[[i]] #select semples of the lvl2 parameters
+        colnames(coefficients) <- update.regressor.names(rownames(BANOVA_output$coef.tables.list[[i]]$coeff_table))
+        
+        title <- paste0("\nSimple effects for ", name,"\n")
+        cat(title)
+        results[[name]] <- perform.calculation()
+      }
+    }
+    return(results)
+  }
   # All other models ----
-  else { 
+   else { 
     intercept_name  <- colnames(BANOVA_output$pvalue.table)[1] #how intercept is labeled
     if (BANOVA_output$single_level){
       # for a single level model design matrix is extracted from BANOVA_output
@@ -570,10 +611,10 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       
       coefficients           <- BANOVA_output$samples_l1_param #select semples of the lvl1 parameters
       colnames(coefficients) <- names_regressors
-      
     } else {
       # for a two level model design matrix is created by "rewriting" two equations into one
-      formula        <- make.formula()
+      formula        <- make.formula(pvalue.table = BANOVA_output$pvalue.table, 
+                                     dep_var = colnames(BANOVA_output$mf1)[1])
       design_matrics <- design.matrix(l1_formula = formula, l2_formula = 'NA', data = BANOVA_output$data, 
                                       contrast = BANOVA_output$contrast)
       design_matrix   <- design_matrics$X

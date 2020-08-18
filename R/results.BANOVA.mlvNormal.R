@@ -178,8 +178,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
       
       # Result tables for of the l_th dependent variable
       anova.tables.list[[dep_var_name]] <- table.ANCOVA(samples_l2_param, Z, X, samples_l1_param, 
-                                                                       array(y[,l], dim = c(length(y[,l]), 1)), 
-                                                                       model = model_name)
+                                                         y_val = array(y[,l], dim = c(length(y[,l]), 1)), 
+                                                         model = model_name)
         
       coef.tables.list[[dep_var_name]]  <- table.coefficients(samples_l1_param, beta1_names, 
                                                               Z_names, X_names, attr(Z, 'assign') + 1, 
@@ -187,7 +187,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
   
       pvalue.tables.list[[dep_var_name]] <- table.pvalue(coef.tables.list[[dep_var_name]]$coeff_table, 
                                                          coef.tables.list[[dep_var_name]]$row_indices, 
-                                                         l1_names = Z_names, l2_names = X_names)
+                                                         l1_names = attr(dMatrice$Z, 'varNames'), 
+                                                         l2_names = attr(dMatrice$X, 'varNames'))
       
       conv.list[[dep_var_name]]          <- conv.geweke.heidel(samples_l1_param, Z_names, X_names)
       class(conv.list[[dep_var_name]]) <- 'conv.diag'
@@ -250,7 +251,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
                                                               attr(Z, 'assign') + 1)
       pvalue.tables.list[[dep_var_name]] <- table.pvalue(coef.tables.list[[dep_var_name]]$coeff_table, 
                                                          coef.tables.list[[dep_var_name]]$row_indices, 
-                                                         l1_names = X_names, l2_names = Z_names)
+                                                         l1_names = attr(dMatrice$X, 'varNames'), 
+                                                         l2_names = attr(dMatrice$Z, 'varNames'))
       conv.list[[dep_var_name]]          <- conv.geweke.heidel(samples_l2_param, X_names, Z_names)
       class(conv.list[[dep_var_name]]) <- 'conv.diag'
     }
@@ -289,8 +291,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
 # source('~/BANOVA_R/R/table.coefficients.R', echo=F)
 # source('~/BANOVA_R/R/table.pvalue.R', echo=F)
 # source('~/BANOVA_R/R/pValues.R', echo=F)
-# source('~/BANOVA_R/R/conv.geweke.heidel.R', echo=TRUE)
-# source('~/BANOVA_R/R/effect.matrix.factor.R', echo=TRUE)
+# source('~/BANOVA_R/R/conv.geweke.heidel.R', echo=F)
+# source('~/BANOVA_R/R/effect.matrix.factor.R', echo=F)
 
 
 # > class(anova.tables.list[[dep_var_name]]$ancova_table)
