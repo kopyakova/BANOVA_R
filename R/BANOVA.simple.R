@@ -432,7 +432,8 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       table <- create_table_result$result
       return_table <- data.frame(table)
       table <- as.table(table)
-      table[, ncol(table)][table[, ncol(table)] == " 0.0000"] = "<0.0001"
+      condition <- table[, ncol(table)] == " 0.0000" || table[, ncol(table)] == "0.0000"
+      table[, ncol(table)][table[, condition] = "<0.0001"
       
       # Print results 
       cat('\n')

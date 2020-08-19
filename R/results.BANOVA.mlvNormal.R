@@ -108,11 +108,29 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     
   }
   
+  prep.return.table <- function(matrix_with_samples){
+    mean         <- apply(matrix_with_samples, 2, mean)
+    sd           <- apply(matrix_with_samples, 2, sd)
+    quantile_025 <- apply(matrix_with_samples, 2, quantile, probs = 0.025, type = 3, na.rm = FALSE)
+    quantile_975 <- apply(matrix_with_samples, 2, quantile, probs = 0.974, type = 3, na.rm = FALSE)
+    p_value      <- pValues(matrix_with_samples)
+    
+    result <- cbind(mean, sd, pmin(quantile_025, quantile_975), pmax(quantile_025, quantile_975),
+                    p_value)
+    result <- format(round(result, 4), nsmall = 4)
+    condition <- result[, ncol(result)] == " 0.0000" || result[, ncol(result)] == "0.0000"
+    result[, ncol(result)][condition] = "<0.0001"
+    colnames(result) <- c("Mean", "SD", "Quantile 0.025", "Quantile 0.975", "p-value")
+    return(result)
+  }
+  
   y <- dMatrice$y
   X <- dMatrice$X
   Z <- dMatrice$Z
   X_names <- colnames(X)
   Z_names <- colnames(Z)
+  n_iter  <-  dim(fit_beta$beta1)[1] # number MCMC iterations / number of samples
+  n_dv    <- length(dep_var_names)
   
   ##### 
   #Extract R2 
@@ -131,6 +149,14 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     tau_ySq <- diag(Sigma)           # Vector with variances for dep vars
     Sigma <- as.data.frame(round(Sigma, digits = 4), row.names = dep_var_names) 
     colnames(Sigma) <- dep_var_names
+
+    variance_samples <- matrix(NA, nrow = n_iter, ncol = dim(Sigma_samples)[2])
+    for (i in 1:n_iter){
+      variance_samples[i, ] <- diag(Sigma_samples[i, ,])
+    }
+    dep_var_sd <- prep.return.table(variance_samples)
+    dep_var_sd <- as.data.frame(dep_var_sd)
+    rownames(dep_var_sd) <- paste0(dep_var_names," SD")
   }
   
   #Extract Omega (correlation matrix) and variances of y variables
@@ -140,6 +166,24 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     Omega <- colMeans(Omega_samples)
     Omega <- as.data.frame(round(Omega, digits = 4), row.names = dep_var_names)
     colnames(Omega) <- dep_var_names
+    
+    correlation_samples <- matrix(NA, nrow = n_iter, ncol = length(Omega[upper.tri(Omega)]))
+    for (i in 1:n_iter){
+      Omega_sample <- Omega_samples[i, ,]
+      correlation_samples[i, ] <- Omega_sample[upper.tri(Omega_sample)]
+    }
+    cor_names <- c()
+    dep_var_names_temp <-  dep_var_names
+    for (dep_var in dep_var_names[-n_dv]){
+      cor_name <- paste0("Correlation (", dep_var, ",", 
+                         dep_var_names_temp[dep_var_names_temp!=dep_var],")")
+      cor_names <- c(cor_names, cor_name)
+      dep_var_names_temp <- dep_var_names_temp[dep_var_names_temp!=dep_var]
+    }
+   
+    dep_var_corr <- prep.return.table(correlation_samples)
+    dep_var_corr <- as.data.frame(dep_var_corr)
+    rownames(dep_var_corr) <- cor_names
   }
   
   ##### Extract first and second level coefficients ##### 
@@ -151,7 +195,6 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     
     L = beta1_dim[2] # number of dependent variables
     J = beta1_dim[3] # number of subject-level effects (1st level)
-    n_iter =  beta1_dim[1] # number MCMC iterations / number of samples
     
     # Prepare names of the coefficients 
     beta1_names <- c()
@@ -202,7 +245,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     M = beta1_dim[2] # number of unique subjects
     J = beta1_dim[4] # number of subject-level effects (1st level)
     K = beta2_dim[3] # number of population-level effects (2nd level)
-    n_iter =  beta1_dim[1] # number MCMC iterations / number of samples
+
     # Prepare names of the coefficients 
     beta1_names <- c()
     for (i in 1:J){
@@ -277,6 +320,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
               samples_l2.list = samples_l2.list,
               covariance.matrix = Sigma,
               correlation.matrix = Omega,
+              test.standard.deviations.of.dep.var = dep_var_sd,
+              test.residual.correlation = dep_var_corr,
               R2 = R2,
               tau_ySq = tau_ySq,
               anova.tables.list = anova.tables.list,
@@ -293,26 +338,3 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
 # source('~/BANOVA_R/R/pValues.R', echo=F)
 # source('~/BANOVA_R/R/conv.geweke.heidel.R', echo=F)
 # source('~/BANOVA_R/R/effect.matrix.factor.R', echo=F)
-
-
-# > class(anova.tables.list[[dep_var_name]]$ancova_table)
-# [1] "data.frame"
-# > class(anova.tables.list[[dep_var_name]]$effect_table)
-# [1] "data.frame"
-
-# class(combined.anova$ancova_table)
-# class(combined.anova$effect_table)
-# > class(coef.tables.list[[dep_var_name]]$row_indices)
-# [1] "matrix"
-# > class(coef.tables.list[[dep_var_name]]$full_table)
-# [1] "data.frame"
-# > class(coef.tables.list[[dep_var_name]]$coeff_table)
-# [1] "data.frame"
-# > class(pvalue.tables.list[[dep_var_name]])
-# [1] "data.frame"
-# > class(conv.list[[dep_var_name]]$sol_geweke)
-# [1] "data.frame"
-# > class(conv.list[[dep_var_name]]$sol_heidel)
-# [1] "data.frame"
-# > class(conv.list[[dep_var_name]]$pass_ind)
-# [1] "logical"
