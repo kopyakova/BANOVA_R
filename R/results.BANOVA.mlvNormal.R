@@ -175,7 +175,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     cor_names <- c()
     dep_var_names_temp <-  dep_var_names
     for (dep_var in dep_var_names[-n_dv]){
-      cor_name <- paste0("Correlation (", dep_var, ",", 
+      cor_name <- paste0("Corr(", dep_var, ",", 
                          dep_var_names_temp[dep_var_names_temp!=dep_var],")")
       cor_names <- c(cor_names, cor_name)
       dep_var_names_temp <- dep_var_names_temp[dep_var_names_temp!=dep_var]
@@ -320,8 +320,8 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
               samples_l2.list = samples_l2.list,
               covariance.matrix = Sigma,
               correlation.matrix = Omega,
-              test.standard.deviations.of.dep.var = dep_var_sd,
-              test.residual.correlation = dep_var_corr,
+              dep_var_sd = dep_var_sd,
+              dep_var_corr = dep_var_corr,
               R2 = R2,
               tau_ySq = tau_ySq,
               anova.tables.list = anova.tables.list,
