@@ -581,17 +581,17 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       dep_var_label  <- colnames(BANOVA_output$mf1)[1]            #name of the matrix with dep vars
       dep_var_matrix <- BANOVA_output$data[, dep_var_label]       #matrix with dep vars
       combined_data  <- cbind(BANOVA_output$data, dep_var_matrix) #data set with y as a matrix and columns
-      design_matrics <- design.matrix(l1_formula = formula, l2_formula = 'NA', data = combined_data,
-                                      contrast = BANOVA_output$contrast)
-      design_matrix  <- design_matrics$X
-      
-      names_regressors <- colnames(design_matrix)
       for (i in 1:BANOVA_output$num_depenent_variables){
         name <- names_dv[i]
         # for a two level model design matrix is created by "rewriting" two equations into one
         formula <- make.formula(BANOVA_output$pvalue.tables.list[[i]],
                                 BANOVA_output$names_of_dependent_variables[[i]])
-        coefficients <- BANOVA_output$samples_l2.list[[i]] #select semples of the lvl2 parameters
+        
+        design_matrics <- design.matrix(l1_formula = formula, l2_formula = 'NA', data = combined_data,
+                                        contrast = BANOVA_output$contrast)
+        design_matrix    <- design_matrics$X
+        names_regressors <- colnames(design_matrix)
+        coefficients     <- BANOVA_output$samples_l2.list[[i]] #select semples of the lvl2 parameters
         colnames(coefficients) <- update.regressor.names(rownames(BANOVA_output$coef.tables.list[[i]]$coeff_table))
         
         title <- paste0("\nSimple effects for ", name,"\n")
