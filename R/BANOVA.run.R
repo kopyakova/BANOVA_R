@@ -464,6 +464,19 @@ BANOVA.run <- function (l1_formula = 'NA',
                                  Z = dMatrice$Z,
                                  id = id,
                                  y = y)
+      }else if (model_name == 'truncNormal'){
+        pooled_data_dict <- list(L = y_lowerBound,
+                                 U = y_upperBound,
+                                 no_lower_bound = no_lower_bound,
+                                 no_upper_bound = no_upper_bound,
+                                 N = nrow(dMatrice$X), 
+                                 J = ncol(dMatrice$X),
+                                 M = nrow(dMatrice$Z),
+                                 K = ncol(dMatrice$Z),
+                                 X = dMatrice$X,
+                                 Z = dMatrice$Z,
+                                 id = id,
+                                 y = y)
       }else{
         pooled_data_dict <- list(N = nrow(dMatrice$X), 
                                  J = ncol(dMatrice$X),
@@ -498,7 +511,7 @@ BANOVA.run <- function (l1_formula = 'NA',
       }
       # For the calculation of effect sizes in mediation
       tau_ySq = NULL
-      if (model_name == 'Normal' || model_name == 'T'){
+      if (model_name %in% c('Normal', 'T', 'truncNormal')){
         if (!is.null(fit_beta$tau_ySq)){
           tau_ySq <- mean(fit_beta$tau_ySq)
         }

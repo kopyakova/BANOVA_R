@@ -6,6 +6,9 @@ data {
   matrix[N, J] X;
   matrix[M, K] Z;
   int<lower=0> id[N];
+  
+  int<lower = 0, upper = 1> no_lower_bound; 
+  int<lower = 0, upper = 1> no_upper_bound; 
   real L; // Lower bound for y values
   real U; // Upper bound for y values
   real <lower = L, upper=U> y[N];
@@ -38,10 +41,19 @@ model {
   tau_y = sqrt(tau_ySq);
   tau_beta1 = sqrt(tau_beta1Sq);
   
-  for (i in 1:N) {
-    y[i] ~ normal(y_hat[i], tau_y) T[L, U];
-  }
-  //y ~ normal(y_hat, tau_y) T[L, U];
+  if (no_lower_bound)
+    for (i in 1:N){
+      y[i] ~ normal(y_hat[i], tau_y) T[, U];
+    }
+  else if (no_upper_bound)
+    for (i in 1:N){
+      y[i] ~ normal(y_hat[i], tau_y) T[L, ];
+    }
+  else
+    for (i in 1:N){
+      y[i] ~ normal(y_hat[i], tau_y) T[L, U];
+    }
+  
   tau_ySq ~ inv_gamma(1, 1);
   for (i in 1:J){
     beta1[i,] ~ normal(mu_beta1[,i], tau_beta1[i]);

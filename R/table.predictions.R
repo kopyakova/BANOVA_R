@@ -1,7 +1,7 @@
 table.predictions <-
 function(x){
   if (x$single_level){
-    if(x$model_name == 'BANOVA.Normal' || x$model_name == 'BANOVA.T' || 'BANOVA.truncNormal'){
+    if(x$model_name %in% c('BANOVA.Normal', 'BANOVA.T', 'BANOVA.truncNormal')){
       l2_values <- attr(x$dMatrice$X, 'varValues')
       l2_values[[1]] <- NULL  # remove y var
       l2_interactions <- attr(x$dMatrice$X, 'interactions')
@@ -137,7 +137,7 @@ function(x){
       }
     }
   }else{
-    if(x$model_name == 'BANOVA.Normal' || x$model_name == 'BANOVA.T'){
+    if(x$model_name %in% c('BANOVA.Normal', 'BANOVA.T', 'BANOVA.truncNormal')){
       sol_tables <- print.table.means(x$coef.tables$coeff_table, x$samples_l2_param, colnames(x$dMatrice$X), X_assign = attr(x$dMatrice$X, 'assign'), 
                         X_classes = attr(x$dMatrice$X, 'dataClasses'), colnames(x$dMatrice$Z), Z_assign = attr(x$dMatrice$Z, 'assign'), 
                         Z_classes = attr(x$dMatrice$Z, 'dataClasses'), l1_values = attr(x$dMatrice$X, 'varValues'), 

@@ -1,7 +1,7 @@
 BANOVA.floodlight <-
   function(sol, var_numeric, var_factor, flood_values = list()){
     if(class(sol) %in% c('BANOVA', 'BANOVA.Normal', 'BANOVA.T', 'BANOVA.Poisson', 'BANOVA.Bern', 
-                         'BANOVA.Bin', 'BANOVA.ordMultinomial', 'BANOVA.Multinomial')){
+                         'BANOVA.Bin', 'BANOVA.ordMultinomial', 'BANOVA.Multinomial', 'BANOVA.truncNormal')){
       
       if (sol$single_level){
         if (sol$model_name == 'BANOVA.Multinomial'){
