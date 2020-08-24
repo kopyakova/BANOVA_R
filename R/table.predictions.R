@@ -1,7 +1,7 @@
 table.predictions <-
 function(x){
   if (x$single_level){
-    if(x$model_name == 'BANOVA.Normal' || x$model_name == 'BANOVA.T'){
+    if(x$model_name == 'BANOVA.Normal' || x$model_name == 'BANOVA.T' || 'BANOVA.truncNormal'){
       l2_values <- attr(x$dMatrice$X, 'varValues')
       l2_values[[1]] <- NULL  # remove y var
       l2_interactions <- attr(x$dMatrice$X, 'interactions')

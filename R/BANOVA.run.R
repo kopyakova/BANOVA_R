@@ -20,11 +20,13 @@ BANOVA.run <- function (l1_formula = 'NA',
                         iter = 2000,
                         num_trials = 1,
                         contrast = NULL, # 1.1.2
+                        y_lowerBound = -Inf,
+                        y_upperBound = Inf,
                         ...
                         ){
   
   # auxiliary function for conversion of effect or dummy coded numeric vectors to factors
-  convert_numeric_2_factor <- function(data_vec){ 
+  convert.numeric.2.factor <- function(data_vec){ 
     levels <- unique(data_vec)
     dummy_condition <- (length(levels) == 2) && (0 %in% levels) && (1 %in% levels)
     effect_condition <- sum(levels) == 0
@@ -37,6 +39,14 @@ BANOVA.run <- function (l1_formula = 'NA',
       data_vec <- as.factor(data_vec)
     }
     return(data_vec)
+  }
+  check.numeric.variables <- function(y_var){
+    if (class(y_var) != 'numeric'){
+      warning("The response variable must be numeric (data class also must be 'numeric')")
+      y_var <- as.numeric(y_var)
+      warning("The response variable has been converted to numeric")
+    }
+    return(y_var)
   }
 
   # data sanity check
@@ -59,11 +69,7 @@ BANOVA.run <- function (l1_formula = 'NA',
       y <- model.response(mf1)
     }
     if (model_name %in% c('Normal', 'T')){
-      if (class(y) != 'numeric'){
-        warning("The response variable must be numeric (data class also must be 'numeric')")
-        y <- as.numeric(y)
-        warning("The response variable has been converted to numeric")
-      }
+      y <- check.numeric.variables(y)
     }else if (model_name %in% c('Poisson', 'Binomial', 'Bernoulli', 'Multinomial', 'ordMultinomial')){
       if (class(y) != 'integer'){
         warning("The response variable must be integers (data class also must be 'integer')..")
@@ -85,15 +91,33 @@ BANOVA.run <- function (l1_formula = 'NA',
       }
     } else if (model_name == "multiNormal") {
       if (is.null(ncol(y))) stop('The number of dependent variables must be greater than 1!')
-      if (is.null(colnames(y))) stop('Please, specify names of dependent variables!')
+      if (is.null(colnames(y))) stop(paste0('Please, specify the names of dependent variables!\n',
+                                     'See Examples in help(BANOVA.run) for the expected specification of the dependent variables.'))
       num_dv <- ncol(y)
       for (l in 1:num_dv){
-        if (class(y[,l]) != 'numeric'){
-          warning("The response variable must be numeric (data class also must be 'numeric')")
-          y[,l] <- as.numeric(y[,l])
-          warning("The response variable has been converted to numeric")
-        }
+        y[,l] <- check.numeric.variables(y[,l])
       }
+    } else if (model_name == 'truncNormal'){
+      y <- check.numeric.variables(y)
+      # if (is.null(y_lowerBound)) y_lowerBound = -Inf
+      # if (is.null(y_upperBound)) y_upperBound = Inf
+      no_lower_bound = 0
+      no_upper_bound = 0
+      if (y_lowerBound == -Inf) no_lower_bound = 1
+      if (y_upperBound == Inf) no_upper_bound = 1
+      if (no_lower_bound == 1 & no_upper_bound == 1){
+        stop(paste0("If the dependent variable is unbounded, please use Normal distributoin!\n", 
+                    "Current lower bound of y is ", y_lowerBound, ", and upper bound is ", y_upperBound))
+      }
+      if (min(y) < y_lowerBound){
+        stop(paste0("At least one value of the dependent variable exceeds the specified lower bound!\n", 
+                    "The lowest value of y is ", min(y), ", while specified lower bound is ", y_lowerBound))
+      }
+      if (max(y) > y_upperBound){
+        stop(paste0("At least one value of the dependent variable exceeds the specified upper bound!\n", 
+                    "The highest value of y is ", max(y), ", while specified lower bound is ", y_upperBound))
+      }
+      
     } else{
       stop(model_name, " is not supported currently!")
     }
@@ -131,7 +155,7 @@ BANOVA.run <- function (l1_formula = 'NA',
           if(class(dataX[[i]][,j]) != 'factor' && class(dataX[[i]][,j]) != 'numeric' && class(dataX[[i]][,j]) != 'integer') stop("data class must be 'factor', 'numeric' or 'integer'")
           if ((class(dataX[[i]][,j]) == 'numeric' | class(dataX[[i]][,j]) == 'integer') & length(unique(dataX[[i]][,j])) <= 3){
             #convert the column to factors
-            dataX[[i]][,j] <- convert_numeric_2_factor(dataX[[i]][,j])
+            dataX[[i]][,j] <- convert.numeric.2.factor(dataX[[i]][,j])
             warning("Within-subject variables(levels <= 3) have been converted to factors")
           }
         }
@@ -201,7 +225,7 @@ BANOVA.run <- function (l1_formula = 'NA',
           # checking numerical predictors, converted to categorical variables if the number of levels is <= 3
           if ((class(data[,i]) == 'numeric' | class(data[,i]) == 'integer') & length(unique(data[,i])) <= 3){
             #convert the column to factors
-            data[,i] <- convert_numeric_2_factor(data[,i])
+            data[,i] <- convert.numeric.2.factor(data[,i])
             warning("Variables(levels <= 3) have been converted to factors")
           }
         }
@@ -232,8 +256,17 @@ BANOVA.run <- function (l1_formula = 'NA',
                                  X = dMatrice$X,
                                  Z = dMatrice$Z,
                                  y = y)
-      }else if(model_name == 'multiNormal'){
+      }else if (model_name == 'multiNormal'){
         pooled_data_dict <- list(L = num_dv,
+                                 N = nrow(dMatrice$X), 
+                                 J = ncol(dMatrice$X),
+                                 X = dMatrice$X,
+                                 y = y)
+      }else if (model_name == 'truncNormal'){
+        pooled_data_dict <- list(L = y_lowerBound,
+                                 U = y_upperBound,
+                                 no_lower_bound = no_lower_bound,
+                                 no_upper_bound = no_upper_bound,
                                  N = nrow(dMatrice$X), 
                                  J = ncol(dMatrice$X),
                                  X = dMatrice$X,
@@ -293,7 +326,7 @@ BANOVA.run <- function (l1_formula = 'NA',
         samples_l2_param <- NULL
         if (model_name == 'Poisson'){
           anova.table <- table.ANCOVA(samples_l2_param, dMatrice$Z, dMatrice$X, samples_l1_param, y_val = array(y, dim = c(length(y), 1)), error = pi^2/3, model = model_name)
-        }else if (model_name == 'Normal' || model_name == 'T'){
+        }else if (model_name %in% c('Normal', 'T', 'truncNormal')){
           anova.table <- table.ANCOVA(samples_l2_param, dMatrice$Z, dMatrice$X, samples_l1_param, array(y, dim = c(length(y), 1)), model = model_name) # for ancova models
           if (!is.null(fit_beta$tau_ySq)){
             tau_ySq <- mean(fit_beta$tau_ySq)
@@ -332,7 +365,7 @@ BANOVA.run <- function (l1_formula = 'NA',
         # checking numerical predictors, converted to categorical variables if the number of levels is <= 3
         if ((class(dataZ[,i]) == 'numeric' | class(dataZ[,i]) == 'integer') & length(unique(dataZ[,i])) <= 3){
           #convert the column to factors
-          dataZ[,i] <- convert_numeric_2_factor(dataZ[,i])
+          dataZ[,i] <- convert.numeric.2.factor(dataZ[,i])
           warning("Between-subject variables(levels <= 3) have been converted to factors")
         }
       }
@@ -342,7 +375,7 @@ BANOVA.run <- function (l1_formula = 'NA',
           # checking numerical predictors, converted to categorical variables if the number of levels is <= 3
           if ((class(dataX[[i]][,j]) == 'numeric' | class(dataX[[i]][,j]) == 'integer') & length(unique(dataX[[i]][,j])) <= 3){
             #convert the column to factors
-            dataX[[i]][,j] <- convert_numeric_2_factor(dataX[[i]][,j])
+            dataX[[i]][,j] <- convert.numeric.2.factor(dataX[[i]][,j])
             warning("Within-subject variables(levels <= 3) have been converted to factors")
           }
         }
@@ -383,7 +416,7 @@ BANOVA.run <- function (l1_formula = 'NA',
           # checking numerical predictors, converted to categorical variables if the number of levels is <= 3
           if ((class(data[,i]) == 'numeric' | class(data[,i]) == 'integer') & length(unique(data[,i])) <= 3){
             #convert the column to factors 
-            data[,i] <- convert_numeric_2_factor(data[,i])
+            data[,i] <- convert.numeric.2.factor(data[,i])
             warning("Variables(levels <= 3) have been converted to factors")
           }
         }
