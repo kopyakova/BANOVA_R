@@ -19,7 +19,6 @@ parameters {
   matrix[K, J] beta2; 
   real<lower=0> tau_ySq;
   vector<lower=0>[J] tau_beta1Sq;
-  
 } 
 
 transformed parameters {

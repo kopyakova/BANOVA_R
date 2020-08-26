@@ -99,8 +99,16 @@ BANOVA.run <- function (l1_formula = 'NA',
       }
     } else if (model_name == 'truncNormal'){
       y <- check.numeric.variables(y)
-      # if (is.null(y_lowerBound)) y_lowerBound = -Inf
-      # if (is.null(y_upperBound)) y_upperBound = Inf
+      #check the specified bounds
+      if (y_lowerBound > y_upperBound){
+        stop(paste0("The lower bound should be below upper bound!\n", 
+                    "Current lower bound of y is ", y_lowerBound, ", and upper bound is ", y_upperBound))
+      }
+      if (y_lowerBound == y_upperBound){
+        stop(paste0("The lower bound should be different from upper bound!\n", 
+                    "Current lower bound of y is ", y_lowerBound, ", and upper bound is ", y_upperBound))
+      }
+      #check if there is an unbounded tail
       no_lower_bound = 0
       no_upper_bound = 0
       if (y_lowerBound == -Inf) no_lower_bound = 1
@@ -109,6 +117,7 @@ BANOVA.run <- function (l1_formula = 'NA',
         stop(paste0("If the dependent variable is unbounded, please use Normal distributoin!\n", 
                     "Current lower bound of y is ", y_lowerBound, ", and upper bound is ", y_upperBound))
       }
+      #check the values of the dependent variable 
       if (min(y) < y_lowerBound){
         stop(paste0("At least one value of the dependent variable exceeds the specified lower bound!\n", 
                     "The lowest value of y is ", min(y), ", while specified lower bound is ", y_lowerBound))
@@ -117,7 +126,6 @@ BANOVA.run <- function (l1_formula = 'NA',
         stop(paste0("At least one value of the dependent variable exceeds the specified upper bound!\n", 
                     "The highest value of y is ", max(y), ", while specified lower bound is ", y_upperBound))
       }
-      
     } else{
       stop(model_name, " is not supported currently!")
     }
