@@ -112,7 +112,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     mean         <- apply(matrix_with_samples, 2, mean)
     sd           <- apply(matrix_with_samples, 2, sd)
     quantile_025 <- apply(matrix_with_samples, 2, quantile, probs = 0.025, type = 3, na.rm = FALSE)
-    quantile_975 <- apply(matrix_with_samples, 2, quantile, probs = 0.974, type = 3, na.rm = FALSE)
+    quantile_975 <- apply(matrix_with_samples, 2, quantile, probs = 0.975, type = 3, na.rm = FALSE)
     p_value      <- pValues(matrix_with_samples)
     
     result <- cbind(mean, sd, pmin(quantile_025, quantile_975), pmax(quantile_025, quantile_975),

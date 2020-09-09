@@ -118,13 +118,23 @@ BANOVA.run <- function (l1_formula = 'NA',
                     "Current lower bound of y is ", y_lowerBound, ", and upper bound is ", y_upperBound))
       }
       #check the values of the dependent variable 
-      if (min(y) < y_lowerBound){
+      min_y <- min(y)
+      max_y <- max(y)
+      if (min_y < y_lowerBound){
         stop(paste0("At least one value of the dependent variable exceeds the specified lower bound!\n", 
-                    "The lowest value of y is ", min(y), ", while specified lower bound is ", y_lowerBound))
+                    "The lowest value of y is ", min_y, ", while specified lower bound is ", y_lowerBound))
       }
-      if (max(y) > y_upperBound){
+      if (max_y > y_upperBound){
         stop(paste0("At least one value of the dependent variable exceeds the specified upper bound!\n", 
-                    "The highest value of y is ", max(y), ", while specified lower bound is ", y_upperBound))
+                    "The highest value of y is ", max_y, ", while specified lower bound is ", y_upperBound))
+      }
+      #check how well the boundaries cover the data
+      three_sd_y <- 3*sd(y)
+      if(y_lowerBound!=(-Inf) && y_lowerBound<(min_y-three_sd_y)){
+        warning("The specified lower bound is more than three standard deviations away from the lowest value of y.\nThis may cause problems with initialization of starting values in the MCMC chains.")
+      }
+      if(y_upperBound!=(Inf) && y_upperBound>(max_y+three_sd_y)){
+        warning("The specified upper bound is more than three standard deviations away from the highest value of y.\nThis may cause problems with initialization of starting values in the MCMC chains.")
       }
     } else{
       stop(model_name, " is not supported currently!")
