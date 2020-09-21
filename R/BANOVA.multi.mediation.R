@@ -42,7 +42,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
   temp_solution$call               <- sol_2$old_id
   temp_solution$model_name         <- 'BANOVA.Normal'
   temp_solution$samples_l2_sigma_param <- sol_2$samples_l2_sigma_param
-  
+  class(temp_solution) <- "BANOVA"
   names(sol_2$R2)      <- names(sol_2$anova.tables.list)
   names(sol_2$tau_ySq) <- names(sol_2$anova.tables.list)
   
@@ -60,11 +60,123 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     temp_solution$mf1              <- adapt.mf1(sol_2$mf1, mediator)
     temp_solution$mf2              <- sol_2$mf2 
 
-    cat(paste0("\nResults for the ", mediator, " mediator\n"))
     sol <- BANOVA.mediation(sol_1, temp_solution, xvar=xvar, mediator=mediator,
-                            individual = individual)
-    print(sol)
-    results[[mediator]] <- sol
+                            individual = individual, return_effects = T)
+    
+    
+   results[[mediator]] <- sol
   }
-  return(results)
+  
+  final_result <- list()
+  #######Report direct effects of the causal variable on the outcome#######
+  cat(paste(strrep("-", 100), '\n'))
+  cat(paste0("Direct effects of the causal variable ", xvar, " on the outcome variable\n\n"))
+  direct_effects_list <- results[[1]]$dir_effect
+  prev_table <- 0
+  for (i in 1:length(direct_effects_list)){
+    new_table <- direct_effects_list[[i]]
+    if (i == 2){
+      cat(paste0("Simple effects of the causal variable ", xvar, "\n\n"))
+    } 
+    if (!identical(prev_table, new_table)){
+      print(as.table(new_table), right=T)
+      cat("\n")
+    }
+    prev_table <- new_table
+  }
+  final_result$dir_effect <- direct_effects_list
+  
+  #######Report (not print) direct effects of the mediator variables on the outcome#######
+  mediator_names <- paste(mediators,  collapse=" and ")
+  #cat(paste0(paste("Direct effects of mediators", mediator_names, "on the outcome variable\n")))
+  for (mediator in mediators){
+    final_result$m1_effects[[mediator]] <- results[[mediator]]$m1_effects
+  }
+
+  #######Report direct effects of the causal variable on mediator variables#######
+  cat(paste(strrep("-", 100), '\n'))
+  cat(paste0(paste("Direct effects of the causal variable", xvar, "on the mediator variables\n\n")))
+  for (mediator in mediators){
+    cat((paste("Direct effects of", xvar, "on", mediator, "\n")))
+    print(as.table(results[[mediator]]$m2_effects[[1]]), right=T)
+    cat("\n")
+    final_result$m2_effects[[mediator]] <- results[[mediator]]$m2_effects[[1]]
+  }
+  
+  #######Report indirect effects of the causal variable#######
+  cat(paste(strrep("-", 100), '\n'))
+  cat(paste0(paste("Indirect effects of the causal variable", xvar, "on the outcome variables\n\n")))
+  for (mediator in mediators){
+    cat((paste("Indirect effects of", xvar, "through", mediator, "\n")))
+    indirect_effects_list <- results[[mediator]]$indir_effects
+    prev_table <- 0
+    for (i in 1:length(indirect_effects_list)){
+      new_table <- indirect_effects_list[[i]]
+      if (!identical(prev_table, new_table)){
+        print(noquote(new_table), row.names = F, right=T)
+        cat("\n")
+      }
+      prev_table <- new_table
+    }
+    
+  
+    final_result$indir_effects[[mediator]] <- results[[mediator]]$indir_effects
+    
+    # print(as.table(results[[mediator]]$indir_effects), right=T)
+    # cat("\n")
+  }
+  
+  #Report total indirect effects of the causal variable
+  #Report total effects of the causal variable
+  
+  
+  #return(results)
+  #######Report total indirect effects of the causal variable#######
+  cat(paste(strrep("-", 100), '\n'))
+  
+  #Extract indirect effects
+  ind_eff_samples      <- list()
+  ind_eff_sample_sizes <- c()
+  for (mediator in mediators){
+    ind_eff_samples <- results[[mediator]]$indirect_effects_samples
+    if (length(ind_eff_samples) > 1){
+      ###?
+    } else {
+      ind_eff_samples[[mediator]] <- as.data.frame(ind_eff_samples[[1]])
+    }
+    ind_eff_sample_sizes <- c(ind_eff_sample_sizes, dim(ind_eff_samples[[mediator]])[2])
+  }
+  common_samples <- min(ind_eff_sample_sizes)
+  
+  first_table <- ind_eff_samples[[1]][,1:common_samples]
+  condtion    <- startsWith(colnames(first_table), "s_")
+  matching_columns <- colnames(first_table)[!condtion]
+  samples_columns  <- colnames(first_table)[condtion]
+  n_matching_columns <- length(matching_columns)
+  for (i in 1:(length(mediators)-1)){
+    combined_samples <- merge(first_table[, 1:common_samples], 
+                              ind_eff_samples[[i+1]][,1:common_samples], 
+                              by = matching_columns)
+    temp1 <- combined_samples[, paste0(samples_columns, ".x")]
+    temp2 <- combined_samples[, paste0(samples_columns, ".y")]
+    first_table[,(n_matching_columns+1):common_samples] <-  temp1 + temp2
+  }
+  colnames(combined_samples)
+  
+  rowMeans(first_table[(n_matching_columns+1):common_samples])
+  result_table[ind,'mean'] <- round(rowMeans(), 4)
+  result_table[ind,c('2.5%', '97.5%')] <- round(quantile(m_samples, probs = c(0.025, 0.975)),4)
+  result_table[ind,'p.value'] <- ifelse(round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4) == 0, '<0.0001', round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4))
+  
+  
+  
+  cat(paste0(paste("Total indirect effects of the causal variable", xvar, "on the outcome variables\n\n")))
+  
+
+  #######Report total effects of the causal variable#######
+  #cuculate total indirect effects of the variables
+  calc.mediation.results <- function(sol, effects_of_interest){
+    
+  }
+  return(final_result)
 }
