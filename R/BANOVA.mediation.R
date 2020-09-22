@@ -94,6 +94,7 @@ BANOVA.mediation <-
           sol$individual_direct[[i]] <- rabind(sol$dir_effects[[i]], id_map)
         }
       }else{
+        
         direct_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, xvar, mediator)
         for (i in 1:length(direct_effects)){
           # filter columns with only "1" or 1 (numeric), TODO: here 1 is hard coded, think about a better way to determine if it is numeric
@@ -302,6 +303,7 @@ BANOVA.mediation <-
       sol$indir_effects <- list()
       sol$effect_size <- list()
       if (return_effects){
+        sol$direct_effects_samples <- direct_effects
         sol$indirect_effects_samples <- list()
       }
       for (i in 1:length(mediator_l1_effects))

@@ -140,12 +140,6 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       l2_variables <- l2_variables[which(l2_variables != intercept_name)]
     }
     
-    # if (BANOVA_output$model_name == "BANOVA.Multinomial"){
-    #   dep_var     <- dep_var_name #must be specified by the user
-    # } else {
-    #   dep_var     <- colnames(BANOVA_output$mf1)[1] # name of the dependent variable
-    # }
-    
     # combine the variables in a single string separated by "+"
     single_vars <-  paste0(c(l1_variables, l2_variables), collapse = " + ")
     
@@ -432,8 +426,8 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       table <- create_table_result$result
       return_table <- data.frame(table)
       table <- as.table(table)
-      condition <- table[, ncol(table)] == " 0.0000" || table[, ncol(table)] == "0.0000"
-      table[, ncol(table)][condition] = "<0.0001"
+      #condition <- table[, ncol(table)] == " 0.0000" || table[, ncol(table)] == "0.0000"
+      #table[, ncol(table)][condition] = "<0.0001"
       
       # Print results 
       cat('\n')
@@ -446,7 +440,7 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       n_vars    <- length(var_names)
       
       rownames(return_table) <- NULL
-      colnames(return_table)[(n_vars+1):ncol(return_table)] <- create_table_result$colnames_return_table
+      #colnames(return_table)[(n_vars+1):ncol(return_table)] <- create_table_result$colnames_return_table
  
       sol_tables[[title]] <- return_table
       

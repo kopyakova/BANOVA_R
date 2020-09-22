@@ -23,11 +23,227 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     names(attr(attr(temp_mf, 'terms'),'dataClasses'))[1] <- mediator
     return(temp_mf)
   }
+  calculate.total.indirect.effects <- function(used_tables_index){
+    ind_eff_samples      <- list()
+    
+    #Exract relevant samples of indirect effects
+    for (mediator in mediators){
+      used_tables <- used_tables_index[[mediator]]
+      ind_eff_samples[[mediator]] <- results[[mediator]]$indirect_effects_samples[used_tables]
+    }
+    
+    n_tables <- length(used_tables_index[[1]])
+    total_indir_eff_samples_list <- list()
+    total_indir_eff_table_list <- list()
+    for (i in 1:n_tables){
+      ind_eff_n_samples <- c()
+      for (mediator in mediators){
+        n_samples <- dim(ind_eff_samples[[mediator]][[i]])[2]
+        ind_eff_n_samples <- c(ind_eff_n_samples, n_samples)
+      }
+      common_samples <- min(ind_eff_n_samples)
+      
+      #Combine the tables
+      combined_table <- ind_eff_samples[[1]][[i]][, 1:common_samples]
+      smpl_indicator <- startsWith(colnames(combined_table), "s_")
+      smpl_columns   <- colnames(combined_table)[smpl_indicator]
+      num_non_smpl_columns <- sum(!smpl_indicator) + 1
+     
+      common_columns    <- colnames(combined_table)[!smpl_indicator]
+      common_columns    <- common_columns[-1] #drop the intercept
+      
+      for (n in 2:n_mediators){
+        common_columns <- intersect(common_columns, colnames(ind_eff_samples[[n]][[i]])[!smpl_indicator])
+      }
+      num_common_columns <- length(common_columns)
+      
+      for (n in 2:n_mediators){
+        temp_table1 <- combined_table[, 1:common_samples]
+        temp_table2 <- ind_eff_samples[[n]][[i]][, 1:common_samples]
+        combined_samples <- merge(temp_table1[, c(common_columns, smpl_columns)], 
+                                  temp_table2[, c(common_columns, smpl_columns)], 
+                                  by = common_columns)
+        temp1 <- combined_samples[, paste0(smpl_columns, ".x")]
+        temp2 <- combined_samples[, paste0(smpl_columns, ".y")]
+        combined_table[, num_non_smpl_columns:common_samples] <-  temp1 + temp2
+      }
+      total_indirect_effects_samples <- combined_table[, c(smpl_columns)]
+      
+      total_indirect_effects <- data.frame(matrix(NA, nrow = nrow(combined_table), ncol = num_common_columns+4))
+      colnames(total_indirect_effects) <- c(common_columns, "mean","2.5%","97.5%","p.value")
+      
+      total_indirect_effects[, 1:num_common_columns] <- combined_table[, common_columns]
+      total_indirect_effects[, "mean"] <- round(apply(total_indirect_effects_samples, 1, mean), 4)
+      quantiles    <- round(apply(total_indirect_effects_samples, 1, quantile, 
+                                  probs = c(0.025, 0.975), type = 3, na.rm = FALSE), 4)
+      total_indirect_effects[, "2.5%"]  <- quantiles["2.5%",]
+      total_indirect_effects[, "97.5%"] <- quantiles["97.5%",]
+      p_values <- round(pValues(t(total_indirect_effects_samples)), 4)
+      total_indirect_effects[, "p.value"] <-  apply(p_values, 1,
+                                                    FUN = function(x) ifelse(x == 0, '<0.0001', x))
+      
+      total_indir_eff_samples_list[[i]] <- cbind(combined_table[, common_columns], 
+                                                 total_indirect_effects_samples)
+      total_indir_eff_table_list[[i]]   <- total_indirect_effects
+    }
+    return(list(total_indirect_effects = total_indir_eff_table_list,
+           total_indirect_effects_samples = total_indir_eff_samples_list))
+  }
+  
+  combine_direct_and_indirect_effects <- function(dir_eff_samples_df, total_indir_eff_samples){
+    n_indir_eff_tables <- length(total_indir_eff_samples)
+    total_eff_table_list <- list()
+    for (i in 1:n_indir_eff_tables){
+      dir_eff_samples <- dir_eff_samples_df
+      indir_eff_samples_df <- data.frame(total_indir_eff_samples[[i]])
+      dim(indir_eff_samples_df)
+      smpl_indicator <- startsWith(colnames(indir_eff_samples_df), "s_")
+      smpl_col_names <- colnames(indir_eff_samples_df)[smpl_indicator]
+      
+      common_samples     <- min(ncol(dir_eff_samples), ncol(indir_eff_samples_df))
+      
+      colnames_dir_eff   <- colnames(dir_eff_samples)
+      colnames_indir_eff <- colnames(indir_eff_samples_df)
+      common_columns     <- intersect(colnames_dir_eff, colnames_indir_eff)
+      n_common_columns   <- length(common_columns)
+      smpl_index         <- (n_common_columns+1):common_samples
+      
+      
+      colnames(dir_eff_samples)[1:common_samples] <- colnames_indir_eff[1:common_samples]
+      
+      total_effect_samples <- merge(dir_eff_samples[, 1:common_samples], 
+                                    indir_eff_samples_df[, 1:common_samples], 
+                                    by = common_columns)
+      
+      temp1 <- total_effect_samples[, paste0(smpl_columns, ".x")]
+      temp2 <- total_effect_samples[, paste0(smpl_columns, ".y")]
+      
+      total_effect_samples[, smpl_index] <-  temp1 + temp2
+      
+      #total_effects_samples <- total_effect_samples[, smpl_index]
+      
+      total_effects <- data.frame(matrix(NA, nrow = nrow(total_effect_samples), ncol = n_common_columns+4))
+      colnames(total_effects) <- c(common_columns, "mean","2.5%","97.5%","p.value")
+      
+      total_effects[, 1:num_common_columns] <- total_effect_samples[, common_columns]
+      total_effects[, "mean"] <- round(apply(total_effect_samples[, smpl_index], 1, mean), 4)
+      quantiles    <- round(apply(total_effect_samples[, smpl_index], 1, quantile, 
+                                  probs = c(0.025, 0.975), type = 3, na.rm = FALSE), 4)
+      total_effects[, "2.5%"]  <- quantiles["2.5%",]
+      total_effects[, "97.5%"] <- quantiles["97.5%",]
+      p_values <- round(pValues(t(total_effect_samples[, smpl_index])), 4)
+      total_effects[, "p.value"] <-  apply(p_values, 1,
+                                           FUN = function(x) ifelse(x == 0, '<0.0001', x))
+      
+      total_eff_table_list[[i]]   <- total_effects
+    }
+    return(total_eff_table_list)
+  }
+  
+  print.result <- function(list_with_results, extra_title = NULL, final_result, list_name,
+                           extra_list_name = NULL, skip_n_last_cols = 0, return_table_index = F){
+    check.if.tables.are.identical <- function(table1, table2){
+      table1_rwnames <- rownames(table1)
+      table2_rwnames <- rownames(table2)
+      rownames(table1) <- NULL
+      rownames(table2) <- NULL
+      return(identical(table1, table2))
+    }
+    print.table <- function(new_table, skip_n_last_cols, extra_title, prev_table = 0){
+      check.table.columns <- function(new_table, skip_n_last_cols){
+        remove_table <- F
+        n_columns <- ncol(new_table)
+        if (is.null(ncol(new_table))){
+          #if the table is a vector
+          n_cols_to_check <- length(new_table) - skip_n_last_cols
+          for (j in 1:n_cols_to_check){
+            if (all(new_table[j] == '0') || all(new_table[j] == 0))
+              remove_table <- T
+          }
+        } else {
+          #otherwise 
+          n_cols_to_check <- n_columns - skip_n_last_cols
+          for (j in 1:n_cols_to_check){
+            if (all(new_table[, j] == '0') || all(new_table[, j] == 0))
+              remove_table <- T
+          }
+        }
+        return(remove_table)
+      }
+      
+      remove_table <- check.table.columns(new_table, skip_n_last_cols)
+      if (!remove_table){
+        if (!check.if.tables.are.identical(prev_table, new_table)){
+          if(!is.null(extra_title)){
+            cat(extra_title)
+          }
+          print(noquote(new_table), row.names = F, right=T)
+          cat("\n")
+        }
+        
+      }
+      return(list(remove_table = remove_table, prev_table = new_table))
+    }
+    
+    
+    list_length <- length(list_with_results)
+    temp_list   <- list()
+    prev_table  <- 0
+    if (list_length > 1){
+      counter    <- 1
+      used_tables_index <- c()
+      for (i in 1:list_length){
+        new_table <- list_with_results[[i]]
+        temp_res  <- print.table(new_table, skip_n_last_cols, extra_title, prev_table)
+        remove_table <- temp_res$remove_table
+        if (!remove_table){
+          if (!check.if.tables.are.identical(prev_table, new_table)){
+            temp_list[[counter]] <- new_table
+            used_tables_index <- c(used_tables_index, i)
+            counter <- counter + 1
+            prev_table   <- temp_res$prev_table
+          }
+        }
+      }
+    } else {
+      new_table    <- list_with_results[[1]]
+      remove_table <- print.table(new_table, skip_n_last_cols, extra_title, prev_table)$remove_table
+      if (!remove_table){
+        temp_list[[1]] <- new_table
+        used_tables_index <- 1
+      }
+    } 
+    
+    temp_list_length <- length(temp_list)
+    if (temp_list_length > 1){
+      counter <- 1
+      for (i in 1:temp_list_length){
+        if(!is.null(extra_list_name)){
+          final_result[[list_name]][[extra_list_name]][[counter]] <- temp_list[[i]]
+        } else {
+          final_result[[list_name]][[counter]] <- temp_list[[i]]
+        }
+        counter <- counter + 1
+      }
+    } else {
+      if(!is.null(extra_list_name)){
+        final_result[[list_name]][[extra_list_name]] <- temp_list[[1]]
+      } else {
+        final_result[[list_name]] <- temp_list[[1]]
+      }
+    }
+    if (return_table_index){
+      return(list(final_result = final_result, used_tables_index = used_tables_index))
+    } else {
+      return(final_result)
+    }
+  }
 
   #Check the class of the model with multiple dependent variables
   if(sol_2$model_name != "BANOVA.multiNormal") 
     stop('The mediator must follow the multivariate Normal distribution, use BANOVA multiNormal models instead.')
   
+  n_mediators <- length(mediators)
   #Adapt the output of BANOVA.multiNormal to fit BANOVA.mediation
   temp_solution <- list()
   temp_solution$samples_cutp_param <- sol_2$samples_cutp_param
@@ -63,7 +279,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     sol <- BANOVA.mediation(sol_1, temp_solution, xvar=xvar, mediator=mediator,
                             individual = individual, return_effects = T)
     
-    
    results[[mediator]] <- sol
   }
   
@@ -71,112 +286,103 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
   #######Report direct effects of the causal variable on the outcome#######
   cat(paste(strrep("-", 100), '\n'))
   cat(paste0("Direct effects of the causal variable ", xvar, " on the outcome variable\n\n"))
-  direct_effects_list <- results[[1]]$dir_effect
-  prev_table <- 0
-  for (i in 1:length(direct_effects_list)){
-    new_table <- direct_effects_list[[i]]
-    if (i == 2){
-      cat(paste0("Simple effects of the causal variable ", xvar, "\n\n"))
-    } 
-    if (!identical(prev_table, new_table)){
-      print(as.table(new_table), right=T)
-      cat("\n")
-    }
-    prev_table <- new_table
-  }
-  final_result$dir_effect <- direct_effects_list
+  final_result <- print.result(list_with_results = results[[1]]$dir_effect, 
+                               final_result = final_result, 
+                               list_name = "dir_effect", skip_n_last_cols = 3)
   
-  #######Report (not print) direct effects of the mediator variables on the outcome#######
+  #######Report direct effects of the mediator variables on the outcome#######
+  cat(paste(strrep("-", 100), '\n'))
   mediator_names <- paste(mediators,  collapse=" and ")
-  #cat(paste0(paste("Direct effects of mediators", mediator_names, "on the outcome variable\n")))
+  cat(paste0(paste("Direct effects of mediators", mediator_names, "on the outcome variable\n")))
   for (mediator in mediators){
-    final_result$m1_effects[[mediator]] <- results[[mediator]]$m1_effects
+    final_result <- print.result(results[[mediator]]$m1_effects, final_result = final_result, 
+                                 extra_title = paste0("Direct effects of ", mediator, "\n"),
+                                 list_name = "m1_effects", extra_list_name = mediator,
+                                 skip_n_last_cols = 3)
   }
 
   #######Report direct effects of the causal variable on mediator variables#######
   cat(paste(strrep("-", 100), '\n'))
   cat(paste0(paste("Direct effects of the causal variable", xvar, "on the mediator variables\n\n")))
   for (mediator in mediators){
-    cat((paste("Direct effects of", xvar, "on", mediator, "\n")))
-    print(as.table(results[[mediator]]$m2_effects[[1]]), right=T)
-    cat("\n")
-    final_result$m2_effects[[mediator]] <- results[[mediator]]$m2_effects[[1]]
+    final_result <- print.result(list_with_results = results[[mediator]]$m2_effects, final_result = final_result, 
+                                 extra_title = paste("Direct effects of", xvar, "on", mediator, "\n"),
+                                 list_name = "m2_effects", extra_list_name = mediator,
+                                 skip_n_last_cols = 3)
   }
   
   #######Report indirect effects of the causal variable#######
   cat(paste(strrep("-", 100), '\n'))
   cat(paste0(paste("Indirect effects of the causal variable", xvar, "on the outcome variables\n\n")))
+  used_tables_index <- list()
   for (mediator in mediators){
-    cat((paste("Indirect effects of", xvar, "through", mediator, "\n")))
-    indirect_effects_list <- results[[mediator]]$indir_effects
-    prev_table <- 0
-    for (i in 1:length(indirect_effects_list)){
-      new_table <- indirect_effects_list[[i]]
-      if (!identical(prev_table, new_table)){
-        print(noquote(new_table), row.names = F, right=T)
-        cat("\n")
-      }
-      prev_table <- new_table
-    }
-    
-  
-    final_result$indir_effects[[mediator]] <- results[[mediator]]$indir_effects
-    
-    # print(as.table(results[[mediator]]$indir_effects), right=T)
-    # cat("\n")
+    temp_result <- print.result(list_with_results = results[[mediator]]$indir_effects, 
+                                 final_result = final_result, 
+                                 extra_title = paste("Indirect effects of", xvar, "via", mediator, "\n"),
+                                 list_name = "indir_effects", extra_list_name = mediator,
+                                 skip_n_last_cols = 3, return_table_index = T)
+    final_result <- temp_result$final_result
+    used_tables_index[[mediator]] <- temp_result$used_tables_index
   }
-  
-  #Report total indirect effects of the causal variable
-  #Report total effects of the causal variable
-  
-  
-  #return(results)
+
   #######Report total indirect effects of the causal variable#######
   cat(paste(strrep("-", 100), '\n'))
-  
-  #Extract indirect effects
-  ind_eff_samples      <- list()
-  ind_eff_sample_sizes <- c()
-  for (mediator in mediators){
-    ind_eff_samples <- results[[mediator]]$indirect_effects_samples
-    if (length(ind_eff_samples) > 1){
-      ###?
-    } else {
-      ind_eff_samples[[mediator]] <- as.data.frame(ind_eff_samples[[1]])
+  cat(paste0(paste("Total indirect effects of the causal variable", xvar, 
+                   "on the outcome variables\n\n")))
+  total_indirect_effects_results <- calculate.total.indirect.effects(used_tables_index)
+  n_tables_with_indirect_effects <- length(used_tables_index[[1]])
+  if (n_tables_with_indirect_effects > 1){
+    for (i in 1:n_tables_with_indirect_effects){
+      table <- total_indirect_effects_results$total_indirect_effects[[i]]
+      print(noquote(table), row.names = F, right=T)
+      cat('\n')
     }
-    ind_eff_sample_sizes <- c(ind_eff_sample_sizes, dim(ind_eff_samples[[mediator]])[2])
+    final_result$total_indir_effect <- total_indirect_effects_results$total_indirect_effects
+  } else{
+      table <- total_indirect_effects_results$total_indirect_effects[[1]]
+      print(noquote(table), row.names = F, right=T)
+      cat('\n')
+      
+      final_result$total_indir_effects <- table
   }
-  common_samples <- min(ind_eff_sample_sizes)
-  
-  first_table <- ind_eff_samples[[1]][,1:common_samples]
-  condtion    <- startsWith(colnames(first_table), "s_")
-  matching_columns <- colnames(first_table)[!condtion]
-  samples_columns  <- colnames(first_table)[condtion]
-  n_matching_columns <- length(matching_columns)
-  for (i in 1:(length(mediators)-1)){
-    combined_samples <- merge(first_table[, 1:common_samples], 
-                              ind_eff_samples[[i+1]][,1:common_samples], 
-                              by = matching_columns)
-    temp1 <- combined_samples[, paste0(samples_columns, ".x")]
-    temp2 <- combined_samples[, paste0(samples_columns, ".y")]
-    first_table[,(n_matching_columns+1):common_samples] <-  temp1 + temp2
-  }
-  colnames(combined_samples)
-  
-  rowMeans(first_table[(n_matching_columns+1):common_samples])
-  result_table[ind,'mean'] <- round(rowMeans(), 4)
-  result_table[ind,c('2.5%', '97.5%')] <- round(quantile(m_samples, probs = c(0.025, 0.975)),4)
-  result_table[ind,'p.value'] <- ifelse(round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4) == 0, '<0.0001', round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4))
-  
-  
-  
-  cat(paste0(paste("Total indirect effects of the causal variable", xvar, "on the outcome variables\n\n")))
-  
 
-  #######Report total effects of the causal variable#######
-  #cuculate total indirect effects of the variables
-  calc.mediation.results <- function(sol, effects_of_interest){
-    
-  }
+ #######Report total effects of the causal variable#######
+  cat(paste(strrep("-", 100), '\n'))
+  cat(paste0(paste("Total effects of the causal variable", xvar, 
+                   "on the outcome variables\n\n")))
+ total_indir_eff_samples <- total_indirect_effects_results$total_indirect_effects_samples
+  
+ dir_eff_list <- results[[1]]$direct_effects_samples
+ dir_eff_list <- dir_eff_list[[length(dir_eff_list)]] #select the last element
+
+ dir_eff_samples     <- dir_eff_list$samples
+ dim_dir_eff_samples <- dim(dir_eff_samples)
+ dir_eff_samples_df  <- data.frame(matrix(dir_eff_samples, 
+                                          dim_dir_eff_samples[1]*dim_dir_eff_samples[2],
+                                          dim_dir_eff_samples[3]))
+ dir_effect_names <- dir_eff_list$index_name
+ if ("(Intercept)" %in% colnames(dir_effect_names)){
+   dir_effect_names <- dir_effect_names[,!colnames(dir_effect_names) %in% "(Intercept)"]
+ }
+ 
+ dir_eff_samples_df <- cbind(dir_effect_names, dir_eff_samples_df)
+ total_effects <- combine_direct_and_indirect_effects(dir_eff_samples_df, total_indir_eff_samples)
+ n_tables_with_total_effects <- length(total_effects)
+ if (n_tables_with_total_effects > 1){
+   for (i in 1:n_tables_with_total_effects){
+     table <- total_effects[[i]]
+     print(noquote(table), row.names = F, right=T)
+     cat('\n')
+   }
+   final_result$total_effects <- total_effects
+ } else{
+   table <- total_effects[[1]]
+   print(noquote(table), row.names = F, right=T)
+   cat('\n')
+   
+   final_result$total_effects <- table
+ }
+
+
   return(final_result)
 }
