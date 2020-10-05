@@ -423,12 +423,20 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       table <- format(round(table, 4), nsmall = 4)
       title <- build.title()
       create_table_result <- create.table()
-      table <- create_table_result$result
-      return_table <- data.frame(table)
-      table <- as.table(table)
-      #condition <- table[, ncol(table)] == " 0.0000" || table[, ncol(table)] == "0.0000"
-      #table[, ncol(table)][condition] = "<0.0001"
+      table               <- create_table_result$result
       
+      if(is.null(nrow(table))){
+        table <- t(as.matrix(table, nrow = 1))
+        dimnames(table)[[1]] <- ""
+      }
+      return_table <- data.frame(table)
+      table        <- as.table(table)
+      #format pValues
+      n_columns <- ncol(table)
+      p_values  <- as.numeric(table[,  n_columns])
+      table[, n_columns] <- ifelse(round(p_values, 4) == 0, '<0.0001', table[,  n_columns])
+      
+        
       # Print results 
       cat('\n')
       cat(title)
@@ -439,8 +447,8 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       var_names <- names(selected_vars)
       n_vars    <- length(var_names)
       
-      rownames(return_table) <- NULL
-      #colnames(return_table)[(n_vars+1):ncol(return_table)] <- create_table_result$colnames_return_table
+      rownames(table) <- NULL
+      colnames(return_table)[(n_vars+1):ncol(return_table)] <- create_table_result$colnames_return_table
  
       sol_tables[[title]] <- return_table
       
