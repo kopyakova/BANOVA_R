@@ -118,8 +118,10 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     result <- cbind(mean, sd, pmin(quantile_025, quantile_975), pmax(quantile_025, quantile_975),
                     p_value)
     result <- format(round(result, 4), nsmall = 4)
-    condition <- result[, ncol(result)] == " 0.0000" || result[, ncol(result)] == "0.0000"
-    result[, ncol(result)][condition] = "<0.0001"
+    #format pValues
+    n_columns <- ncol(result)
+    p_values  <- as.numeric(result[,  n_columns])
+    result[, ncol(result)] <- ifelse(round(p_values, 4) == 0, '<0.0001', table[,  n_columns])
     colnames(result) <- c("Mean", "SD", "Quantile 0.025", "Quantile 0.975", "p-value")
     return(result)
   }
@@ -331,10 +333,3 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
               num_depenent_variables = length(dep_var_names),
               names_of_dependent_variables = dep_var_names))
 }
-
-# source('~/BANOVA_R/R/table.ANCOVA.R', echo=F)
-# source('~/BANOVA_R/R/table.coefficients.R', echo=F)
-# source('~/BANOVA_R/R/table.pvalue.R', echo=F)
-# source('~/BANOVA_R/R/pValues.R', echo=F)
-# source('~/BANOVA_R/R/conv.geweke.heidel.R', echo=F)
-# source('~/BANOVA_R/R/effect.matrix.factor.R', echo=F)
