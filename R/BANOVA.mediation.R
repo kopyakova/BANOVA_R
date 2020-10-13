@@ -2,7 +2,8 @@
 # In this version, the mediation analysis only includes one mediator
 ###
 BANOVA.mediation <-
-  function(sol_1, sol_2, xvar, mediator, individual = F, return_effects = F){
+  function(sol_1, sol_2, xvar, mediator, individual = F, return_effects = F, 
+           multi_samples_beta1_raw_m = NULL){
     if(!(class(sol_1) %in% c('BANOVA', 'BANOVA.Normal', 'BANOVA.T', 'BANOVA.Poisson', 'BANOVA.Bern', 
                              'BANOVA.Bin', 'BANOVA.ordMultinomial'))) stop('The Model is not supported yet')
     if(sol_1$model_name == 'BANOVA.Multinomial') stop('The Model is not supported yet')
@@ -66,10 +67,16 @@ BANOVA.mediation <-
       dimnames(samples_l1_individual) <- list(X_names, NULL, NULL)
       
       # mediator
-      fit_betas_m <- rstan::extract(sol_2$stan_fit, permuted = T)
-      samples_l1_raw_m <- fit_betas_m$beta1
-      #X_names_m = colnames(sol_2$dMatrice$X)
-      samples_l1_individual_m <- aperm(samples_l1_raw_m, c(2,1,3)) # dimension: num_l1 x sample size x num_id
+      if(is.null(multi_samples_beta1_raw_m)){
+        fit_betas_m <- rstan::extract(sol_2$stan_fit, permuted = T)
+        samples_l1_raw_m <- fit_betas_m$beta1
+        #X_names_m = colnames(sol_2$dMatrice$X)
+        samples_l1_individual_m <- aperm(samples_l1_raw_m, c(2,1,3)) # dimension: num_l1 x sample size x num_id
+      } else {
+        samples_l1_raw_m <- multi_samples_beta1_raw_m
+        samples_l1_individual_m <- aperm(samples_l1_raw_m, c(3,1,2))
+      }
+      
       dimnames(samples_l1_individual_m) <- list(X_names_m, NULL, NULL)
       
       # calc id map
@@ -166,6 +173,10 @@ BANOVA.mediation <-
           
         }
       }
+      if (return_effects){
+        sol$direct_effects_samples <- direct_effects
+        sol$indirect_effects_samples <- list()
+      }
       
       k <- 1
       sol$indir_effects <- list()
@@ -173,9 +184,15 @@ BANOVA.mediation <-
       sol$individual_indirect <- list()
       for (i in 1:length(mediator_l1_effects))
         for (j in 1:length(mediator_xvar_effects)){
-          comb_eff <- combine.effects.individual(mediator_l1_effects[[i]], mediator_xvar_effects[[j]], sol_1$tau_ySq, sol_1$data, mediator, id_map)
+          comb_eff <- combine.effects.individual(mediator_l1_effects[[i]], mediator_xvar_effects[[j]], 
+                                                 sol_1$tau_ySq, sol_1$data, mediator, id_map,
+                                                 return_effects)
           indirect_effects <- comb_eff$table
           sol$effect_size[[k]] <- comb_eff$effect_size
+          if (return_effects){
+            sol$indirect_effects_samples[[k]] <- comb_eff$samples
+          }
+          
           idx_to_rm <- c()
           for (j in 1:ncol(indirect_effects)){
             if (all(indirect_effects[, j, 1] == '1') || all(indirect_effects[, j, 1] == 1))
@@ -340,7 +357,8 @@ BANOVA.mediation <-
     }
   }
 
-combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq, data, mediator, id_map){
+combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq, data, mediator, id_map,
+                                        return_effects){
   num_id = dim(mediator_l1_effects$samples)[3]
   table_1_names <- mediator_l1_effects$index_name
   table_2_names <- mediator_xvar_effects$index_name
@@ -403,7 +421,12 @@ combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effec
     #result_table <- result_table[do.call(order, result_table),,]
     
   }
-  return(list(table = result_table, effect_size = effect_size))
+  if (return_effects){
+    return_list <- list(table = result_table, effect_size = effect_size, samples = result_table_sample)
+  } else {
+    return_list <- list(table = result_table, effect_size = effect_size)
+  }
+  return(return_list)
 }
 
 combine.effects <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq, data, mediator,
