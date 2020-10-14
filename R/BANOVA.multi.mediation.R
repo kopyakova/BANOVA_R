@@ -191,7 +191,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
       #find common columns
       common_columns    <- colnames(combined_table)[!smpl_indicator]
       if ("(Intercept)" %in% common_columns){
-        common_columns <- common_columns[,!common_columns %in% "(Intercept)"] #drop the intercept
+        common_columns <- common_columns[!common_columns %in% "(Intercept)"] #drop the intercept
       }
       for (n in 2:num_mediators){
         common_columns <- intersect(common_columns, colnames(ind_eff_samples[[n]][[i]])[!smpl_indicator])
@@ -392,7 +392,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
   class(temp_solution) <- "BANOVA"
   names(sol_2$R2)      <- names(sol_2$anova.tables.list)
   names(sol_2$tau_ySq) <- names(sol_2$anova.tables.list)
-  counter <- 1
   for (mediator in mediators){
     temp_solution$anova.table      <- sol_2$anova.tables.list[[mediator]]
     temp_solution$coef.tables      <- sol_2$coef.tables.list[[mediator]]
@@ -407,11 +406,14 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     temp_solution$mf2              <- sol_2$mf2 
     if(individual){
       stan_fit      <- rstan::extract(sol_2$stan_fit, permuted = T)
-      samples_beta1 <- stan_fit$beta1[, , , counter]
-      sol <- BANOVA.mediation(sol_1, sol_2 = temp_solution, xvar=xvar, mediator=mediator,
-                              individual = individual, return_effects = T,
-                              multi_samples_beta1_raw_m = samples_beta1)
-      counter       <- counter + 1
+      if (sol_1$single_level || sol_2$single_level){
+        stop("It seems to be a between-subject design, set individual = FALSE instead.")
+      } else {
+        samples_beta1 <- stan_fit$beta1[, , which(sol_2$names_of_dependent_variables == mediator), ]
+        sol <- BANOVA.mediation(sol_1, sol_2 = temp_solution, xvar=xvar, mediator=mediator,
+                                individual = individual, return_effects = T,
+                                multi_samples_beta1_raw_m = samples_beta1)
+      }
     } else {
       sol <- BANOVA.mediation(sol_1, sol_2 = temp_solution, xvar=xvar, mediator=mediator,
                               individual = individual, return_effects = T)
@@ -426,7 +428,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     
     #######Prepare and save direct and indirect effects#######
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Indirect effects of the causal variable", xvar, "on the outcome variables\n\n")))
+    cat(paste("Indirect effects of the causal variable", xvar, "on the outcome variables\n\n"))
     for (mediator in mediators){
       #Individual direct effects of the causal variable on the outcome
       final_results[["dir_effects"]][[mediator]] <- intermediate_results[[mediator]][["dir_effects"]]
@@ -450,7 +452,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
                                   skip_n_last_cols = 6, return_table_index = T)
       final_results[["individual_indirect"]][[mediator]] <- temp_result[[1]]$individual_indirect[[mediator]]
       used_tables_index[[mediator]] <- temp_result$used_tables_index
-      final_results$effect_size[[mediator]] <- intermediate_results[[mediator]]$effect_size
+      final_results$effect_sizes[[mediator]] <- intermediate_results[[mediator]]$effect_size
     }
     
     #######Report total individual indirect effects of the causal variable#######
@@ -461,13 +463,13 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
       add.an.original.id(total_indirect_effects_results$total_indirect_effects, id_map, T)
     #print and save total individual indirect effects
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Total individual indirect effects of the causal variable", xvar, 
-                     "on the outcome variables\n\n")))
+    cat(paste("Total individual indirect effects of the causal variable", xvar, 
+                     "on the outcome variables\n\n"))
     print.tables.with.total.effects(total_indirect_effects_results$total_indirect_effects, 
                                     num_tables_with_indirect_effects)
     final_results <- save.tables.with.total.effects(total_indirect_effects_results$total_indirect_effects, 
                                    num_tables_with_indirect_effects,
-                                   "total_indir_effect")
+                                   "total_indir_effects")
     
     #######Report total individual effects of the causal variable#######
     total_indir_eff_samples <- total_indirect_effects_results$total_indirect_effects_samples
@@ -477,8 +479,8 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     total_effects <- add.an.original.id(total_effects, id_map, T)
     #print and save total individual effects
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Total individual effects of the causal variable", xvar, 
-                     "on the outcome variables\n\n")))
+    cat(paste("Total individual effects of the causal variable", xvar, 
+                     "on the outcome variables\n\n"))
     num_tables_with_total_effects <- length(total_effects)
     print.tables.with.total.effects(total_effects, num_tables_with_total_effects)
     final_results <- save.tables.with.total.effects(total_effects, num_tables_with_total_effects,
@@ -488,15 +490,15 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
   else{
     #######Report direct effects of the causal variable on the outcome#######
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0("Direct effects of the causal variable ", xvar, " on the outcome variable\n\n"))
+    cat(paste("Direct effects of the causal variable", xvar, "on the outcome variable\n\n"))
     final_results <- print.result(list_with_results = intermediate_results[[1]]$dir_effect, 
                                   final_results = final_results, 
-                                  list_name = "dir_effect", skip_n_last_cols = 3)
+                                  list_name = "dir_effects", skip_n_last_cols = 3)
     
     #######Report direct effects of the mediator variables on the outcome#######
     mediator_names <- paste(mediators,  collapse=" and ")
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Direct effects of mediators", mediator_names, "on the outcome variable\n")))
+    cat(paste("Direct effects of mediators", mediator_names, "on the outcome variable\n\n"))
     for (mediator in mediators){
       final_results <- print.result(list_with_results = intermediate_results[[mediator]]$m1_effects, 
                                     final_results = final_results, 
@@ -507,7 +509,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     
     #######Report direct effects of the causal variable on mediator variables#######
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Direct effects of the causal variable", xvar, "on the mediator variables\n\n")))
+    cat(paste("Direct effects of the causal variable", xvar, "on the mediator variables\n\n"))
     for (mediator in mediators){
       final_results <- print.result(list_with_results = intermediate_results[[mediator]]$m2_effects, 
                                     final_results = final_results, 
@@ -518,7 +520,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     
     #######Report indirect effects of the causal variable and effect size#######
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Indirect effects of the causal variable", xvar, "on the outcome variables\n\n")))
+    cat(paste("Indirect effects of the causal variable", xvar, "on the outcome variables\n\n"))
     used_tables_index <- list()
     for (mediator in mediators){
       temp_result <- print.result(list_with_results = intermediate_results[[mediator]]$indir_effects, 
@@ -529,20 +531,21 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
                                   print_effect_sizes = T)
       final_results <- temp_result$final_results
       used_tables_index[[mediator]] <- temp_result$used_tables_index
-      final_results$effect_size[[mediator]] <- intermediate_results[[mediator]]$effect_size
+      final_results$effect_sizes[[mediator]] <- 
+        intermediate_results[[mediator]]$effect_size[temp_result$used_tables_index]
     }
     
     #######Report total indirect effects of the causal variable#######
     total_indirect_effects_results   <- calculate.total.indirect.effects(used_tables_index)
     num_tables_with_indirect_effects <- length(used_tables_index[[1]])
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Total indirect effects of the causal variable", xvar, 
-                     "on the outcome variables\n\n")))
+    cat(paste("Total indirect effects of the causal variable", xvar, 
+                     "on the outcome variables\n\n"))
     print.tables.with.total.effects(total_indirect_effects_results$total_indirect_effects, 
                                     num_tables_with_indirect_effects)
     final_results <- save.tables.with.total.effects(total_indirect_effects_results$total_indirect_effects, 
                                    num_tables_with_indirect_effects,
-                                   "total_indir_effect")
+                                   "total_indir_effects")
 
     #######Report total effects of the causal variable#######
     #Extract total indirect effects
@@ -551,8 +554,8 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     total_effects <- combine_direct_and_indirect_effects(dir_eff_samples, total_indir_eff_samples)
     num_tables_with_total_effects <- length(total_effects)
     cat(paste(strrep("-", 100), '\n'))
-    cat(paste0(paste("Total effects of the causal variable", xvar, 
-                     "on the outcome variables\n\n")))
+    cat(paste("Total effects of the causal variable", xvar, 
+                     "on the outcome variables\n\n"))
     print.tables.with.total.effects(total_effects, num_tables_with_total_effects)
     final_results <- save.tables.with.total.effects(total_effects, num_tables_with_total_effects,
                                    "total_effects")
@@ -560,5 +563,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
   final_results$xvar <- xvar
   final_results$mediators <- mediators
   final_results$individual <- individual
+  class(final_results) <- 'BANOVA.multi.mediation'
   return(final_results)
 }
