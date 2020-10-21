@@ -62,7 +62,6 @@ BANOVA.mediation <-
       }
       fit_betas <- rstan::extract(sol_1$stan_fit, permuted = T)
       samples_l1_raw <- fit_betas$beta1
-      #X_names = colnames(sol_1$dMatrice$X)
       samples_l1_individual <- aperm(samples_l1_raw, c(2,1,3)) # dimension: num_l1 x sample size x num_id
       dimnames(samples_l1_individual) <- list(X_names, NULL, NULL)
       
@@ -70,7 +69,6 @@ BANOVA.mediation <-
       if(is.null(multi_samples_beta1_raw_m)){
         fit_betas_m <- rstan::extract(sol_2$stan_fit, permuted = T)
         samples_l1_raw_m <- fit_betas_m$beta1
-        #X_names_m = colnames(sol_2$dMatrice$X)
         samples_l1_individual_m <- aperm(samples_l1_raw_m, c(2,1,3)) # dimension: num_l1 x sample size x num_id
       } else {
         samples_l1_raw_m <- multi_samples_beta1_raw_m
@@ -117,7 +115,7 @@ BANOVA.mediation <-
         }
       }
       
-      ## calculate effects of the mediator in model 1
+      # calculate (direct) effects of the mediator in model 1
       if (!(mediator %in% rownames(model1_level1_var_matrix))) stop("The mediator is between subjects, please set individual = FALSE.")
       mediator_l1_effects <- cal.mediation.effects.individual(sol_1, samples_l1_individual, mediator, xvar, is_mediator = T)
       sol$m1_effects <- list()
@@ -135,12 +133,13 @@ BANOVA.mediation <-
         
       }
       
-      # calculate effects of the xvar in model 2
+      # calculate (direct) effects of the xvar on mediator (in model 2)
       sol$m2_effects <- list()
       if (xvar %in% rownames(model2_level1_var_matrix)){ 
         mediator_xvar_effects <- cal.mediation.effects.individual(sol_2, samples_l1_individual_m, xvar)
         for (i in 1:length(mediator_xvar_effects)){
-          mediator_xvar_effects[[i]]$table_m <- abind(array(1, dim = c(nrow(mediator_xvar_effects[[i]]$table_m), 1), dimnames = list(NULL, mediator)), mediator_xvar_effects[[i]]$table_m)
+          temp_array <- array(1, dim = c(nrow(mediator_xvar_effects[[i]]$table_m), 1), dimnames = list(NULL, mediator))
+          mediator_xvar_effects[[i]]$table_m <- abind(temp_array, mediator_xvar_effects[[i]]$table_m)
           mediator_xvar_effects[[i]]$index_name <- cbind(array(1, dim = c(nrow(mediator_xvar_effects[[i]]$index_name), 1), dimnames = list(NULL, mediator)), mediator_xvar_effects[[i]]$index_name)
           # filter columns with only "1" or 1 (numeric), TODO: here 1 is hard coded, think about a better way to determine if it is numeric
           idx_to_rm <- c()
@@ -181,7 +180,7 @@ BANOVA.mediation <-
       sol$indir_effects <- list()
       sol$effect_size <- list()
       sol$individual_indirect <- list()
-      for (i in 1:length(mediator_l1_effects))
+      for (i in 1:length(mediator_l1_effects)){
         for (j in 1:length(mediator_xvar_effects)){
           comb_eff <- combine.effects.individual(mediator_l1_effects[[i]], mediator_xvar_effects[[j]], 
                                                  sol_1$tau_ySq, sol_1$data, mediator, id_map,
@@ -204,7 +203,7 @@ BANOVA.mediation <-
           sol$individual_indirect[[k]] <- rabind(sol$indir_effects[[k]])
           k <- k + 1
         }
-      
+      }
       sol$xvar = xvar
       sol$mediator = mediator
       sol$individual = individual
@@ -377,6 +376,7 @@ combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effec
   # standardize the names of this table, so that the output table looks consistant, direct vs indirect, e.g. sort the column names
   union_names <- union(colnames(table_1_names), colnames(table_2_names))
   union_names <- union_names[order(union_names)]
+  union_names_original <- union_names
   #result_table <- array('1', dim = c(nrow(temp_table_index), ncol(temp_table_index) - 2 + 3 + 1 + 2, num_id), dimnames = list(rep("",nrow(temp_table_index)), c(union_names, 'mean', '2.5%', '97.5%', 'p.value', 'id', 'effect size'), NULL))
   result_table <- array('1', dim = c(nrow(temp_table_index), length(union_names) + 6, num_id), 
                         dimnames = list(rep("",nrow(temp_table_index)), c(union_names, 'mean', '2.5%', '97.5%', 'p.value', 'id', 'effect size'), NULL))
@@ -388,13 +388,16 @@ combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effec
   
   effect_size <- rep("", num_id)
   for (i in 1:num_id){
+    union_names <- union_names_original
     result_table[, 'id', i] <- id_map[i]
     for (nm in union_names){
       result_table[, nm, i] <- as.character(temp_table_index[[nm]])
       result_table_sample[, nm, i] <- as.character(temp_table_index[[nm]])
     }
     for (ind in 1:nrow(table_1_est_sample_index)){
-      m_samples <- mediator_l1_effects$samples[as.integer(table_1_est_sample_index[ind,1]), 1:common_n_sample, i] * mediator_xvar_effects$samples[as.integer(table_2_est_sample_index[ind,1]), 1:common_n_sample, i]
+      index_1 <- as.integer(table_1_est_sample_index[ind,1])
+      index_2 <- as.integer(table_2_est_sample_index[ind,1])
+      m_samples <- mediator_l1_effects$samples[index_1, 1:common_n_sample, i] * mediator_xvar_effects$samples[index_2, 1:common_n_sample, i]
       result_table[ind,'mean', i] <- round(mean(m_samples), 4)
       result_table[ind,c('2.5%', '97.5%'), i] <- round(quantile(m_samples, probs = c(0.025, 0.975)),4)
       result_table[ind,'p.value', i] <- ifelse(round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4) == 0,
@@ -416,17 +419,18 @@ combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effec
     if (length(to_rm) > 0)
       union_names <- union_names[-to_rm]
     data_eff <- data[, union_names, drop = F]
-    data_eff_sample <- merge(data_eff, result_table_sample[,,i], by = union_names, all.x = TRUE)
+    #If result_table_sample contains only one row it is treated as "character and mergind fails
+    if (class(result_table_sample[,,i]) != "matrix"){
+      data_eff_sample <- merge(data_eff, t(data.frame(result_table_sample[,,i])), by = union_names, all.x = TRUE)
+    } else {
+      data_eff_sample <- merge(data_eff, result_table_sample[,,i], by = union_names, all.x = TRUE)
+    }
     data_eff_sample <- apply(data_eff_sample[, paste('s_', 1:common_n_sample, sep = "")], 2, as.character)
     data_eff_sample <- apply(data_eff_sample, 2, as.numeric)
     var_sample <- apply(data_eff_sample, 2, var)
     eff_sample <- var_sample/(var_sample + tau_ySq)
     effect_size[i] <- paste(round(mean(eff_sample), 3), " (", paste(round(quantile(eff_sample, probs = c(0.025, 0.975)),3), collapse = ','), ")", sep="")
     result_table[, 'effect size', i] <- effect_size[i]
-    ##sort values column by column
-    #result_table[,,i] <- data.frame(result_table[,,i], check.names=FALSE)
-    #result_table <- result_table[do.call(order, result_table),,]
-    
   }
   if (return_effects){
     return_list <- list(table = result_table, effect_size = effect_size, samples = result_table_sample)
@@ -513,9 +517,20 @@ abind <- function(a, b){
   n_id <- dim(b)[3]
   n_r <- dim(b)[1]
   n_c <- dim(b)[2]
+  
+  dim_a <- dim(a)
+  mediator <- colnames(a)
   res <- array(NA, dim = c(n_r, n_c+ncol(a), n_id), dimnames = list(NULL, c(colnames(a), dimnames(b)[[2]]), NULL))
-  for (i in 1:n_id){
-    res[,,i] <- cbind(a, b[,,i])
+  if(dim_a[1] != 1){
+    for (i in 1:n_id){
+      res[,,i] <- cbind(a, b[,,i])
+    }
+  } else {
+    for (i in 1:n_id){
+      temp <- c(a, b[,,i])
+      names(temp)[1:dim_a[2]] <- mediator
+      res[,,i] <- temp
+    }
   }
   return(res)
 }

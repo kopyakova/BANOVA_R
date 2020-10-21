@@ -14,16 +14,16 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
   #adapts the mf1 of a multivariate sol_2 to work with BANOVA.mediaation
   adapt.mf1 <- function(mf, mediator){
     temp_mf <- mf
-    mediator_of_interest <- mf[,1][,mediator]
+    mediator_of_interest <- mf[,1][, mediator, drop = F]
     
     #data frame
     temp_mf[, 1] <- mediator_of_interest
     colnames(temp_mf)[1] <- mediator
     
     #terms attribute
-    #if (!is.null(rownames(attr(attr(temp_mf, "terms"),'factors'))[1])){
+    if (!is.null(rownames(attr(attr(temp_mf, "terms"),'factors'))[1])){
       rownames(attr(attr(temp_mf, "terms"),'factors'))[1] <- mediator
-    #}
+    }
     attr(attr(temp_mf, 'terms'),'dataClasses')[1] <- "numeric"
     names(attr(attr(temp_mf, 'terms'),'dataClasses'))[1] <- mediator
     return(temp_mf)
@@ -164,9 +164,10 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
           colnames(ind_eff_samples_reshaped) <- colnames(temp)
           id <- c()
           for(j in 1:temp_dim[3]){
-            selected_rows <- data.frame(temp[, , j], stringsAsFactors = F)
+            selected_rows <- data.frame(temp[, , j, drop = F], stringsAsFactors = F)
+            colnames(selected_rows) <-colnames(temp)
             #covert factors to numeric values
-            selected_rows[, temp_smpl_indicator] <-  as.data.frame(sapply(selected_rows[, temp_smpl_indicator], as.numeric))
+            selected_rows[, temp_smpl_indicator] <- (sapply(selected_rows[, temp_smpl_indicator], as.numeric))
             ind_eff_samples_reshaped[row_counter+num_rows*(j-1), ] <- selected_rows
             id <- c(id, rep(j, num_rows))
           }
@@ -409,9 +410,17 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     if(individual){
       stan_fit      <- rstan::extract(sol_2$stan_fit, permuted = T)
       if (sol_1$single_level || sol_2$single_level){
-        stop("It seems to be a between-subject design, set individual = FALSE instead.")
+         stop("It seems to be a between-subject design, set individual = FALSE instead.")
       } else {
-        samples_beta1 <- stan_fit$beta1[, , which(sol_2$names_of_dependent_variables == mediator), ]
+        if (sol_2$single_level){
+          samples_beta1 <- stan_fit$beta1
+        } else {
+          samples_beta1 <- stan_fit$beta1[, , which(sol_2$names_of_dependent_variables == mediator), ]
+        }
+        dim_beta1 = dim(samples_beta1)
+        if (length(dim_beta1) == 2){
+          dim(samples_beta1) <- c(dim_beta1[1],dim_beta1[2],1)
+        }
         sol <- BANOVA.mediation(sol_1, sol_2 = temp_solution, xvar=xvar, mediator=mediator,
                                 individual = individual, return_effects = T,
                                 multi_samples_beta1_raw_m = samples_beta1)
