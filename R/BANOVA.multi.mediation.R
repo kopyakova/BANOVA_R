@@ -272,7 +272,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     #Drop the intercept name
     temp_colnames <- colnames(dir_effect_names)
     if ("(Intercept)" %in% colnames(dir_effect_names)){
-      dir_effect_names <- dir_effect_names[,!colnames(dir_effect_names) %in% "(Intercept)"]
+      dir_effect_names <- dir_effect_names[,!colnames(dir_effect_names) %in% "(Intercept)", drop = F]
       if (is.null(dim(dir_effect_names))){
         dir_effect_names <- as.data.frame(as.matrix(dir_effect_names))
         colnames(dir_effect_names) <- temp_colnames[!temp_colnames %in% "(Intercept)"]
