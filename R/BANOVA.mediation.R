@@ -262,7 +262,6 @@ BANOVA.mediation <-
       }
       }
       ##################
-      
       # calculate direct effect of xvar in model 1
       direct_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, xvar, mediator)
       sol$dir_effects <- list()
@@ -281,7 +280,7 @@ BANOVA.mediation <-
       }
       
       # calculate effects of the mediator in model 1
-      mediator_l1_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, mediator, xvar)
+      mediator_l1_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, mediator, xvar = "NA")
       sol$m1_effects <- list()
       for (i in 1:length(mediator_l1_effects)){
         # filter columns with only "1" or 1 (numeric), TODO: here 1 is hard coded, think about a better way to determine if it is numeric
