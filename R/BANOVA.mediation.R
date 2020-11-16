@@ -4,21 +4,38 @@
 BANOVA.mediation <-
   function(sol_1, sol_2, xvar, mediator, individual = F, return_effects = F, 
            multi_samples_beta1_raw_m = NULL){
+    prepare_list_name <- function(interacting_variables, moderated_var){
+      var_names <- colnames(interacting_variables)
+      moderators <- var_names[var_names != moderated_var]
+      if (length(moderators) > 1){
+        moderators <- paste(moderators, collapse ="_and_")
+      }
+      title <- paste0("simple_effects_of_", moderated_var, "_at_levels_of_",moderators)
+      return(title)
+    }
+    
+    #Model for the outome variable (sol_1) can follow any distribution except for the Multinomial
     if(!(class(sol_1) %in% c('BANOVA', 'BANOVA.Normal', 'BANOVA.T', 'BANOVA.Poisson', 'BANOVA.Bern', 
                              'BANOVA.Bin', 'BANOVA.ordMultinomial'))) stop('The Model is not supported yet')
     if(sol_1$model_name == 'BANOVA.Multinomial') stop('The Model is not supported yet')
+    #Model for the mediator (sol_2) must be Normal
     if(sol_2$model_name != 'BANOVA.Normal') stop('The mediator must follow the Normal distribution, use BANOVA Normal models instead.')
     
+    #####Outcome variable
+    #Extract names of the regressors in the outome model
     X_names = colnames(sol_1$dMatrice$X)
     Z_names = colnames(sol_1$dMatrice$Z)
+    #Extract indexes of regressors with correspondace to the variables (Intercept - 0)
     X_assign = attr(sol_1$dMatrice$X, 'assign')
     Z_assign = attr(sol_1$dMatrice$Z, 'assign')
-    num_l1 <- length(X_assign)
-    num_l2 <- length(Z_assign)
-    if (sol_1$single_level)
+    num_l1 <- length(X_assign) #num level 1 regressors in the outome model
+    num_l2 <- length(Z_assign) #num level 2 regressors in the outome model
+    #Extract relevant coefficients in the outome model
+    if (sol_1$single_level){
       samples_l2_param <- sol_1$samples_l1_param
-    else
+    } else {
       samples_l2_param <- sol_1$samples_l2_param
+    }
     n_sample <- nrow(samples_l2_param)
     est_matrix <- array(0 , dim = c(num_l1, num_l2, n_sample), dimnames = list(X_names, Z_names, NULL))
     for (i in 1:num_l1){
@@ -26,25 +43,30 @@ BANOVA.mediation <-
         est_matrix[i,,j] <- samples_l2_param[j,((i-1)*num_l2+1):((i-1)*num_l2+num_l2)]
     }
     
-    # mediator
+    #####Mediator
+    #Extract names of the regressors in the mediator model
     X_names_m = colnames(sol_2$dMatrice$X)
     Z_names_m = colnames(sol_2$dMatrice$Z)
+    #Extract indexes of regressors with correspondace to the variables (Intercept - 0)
     X_assign_m = attr(sol_2$dMatrice$X, 'assign')
     Z_assign_m = attr(sol_2$dMatrice$Z, 'assign')
-    num_l1_m <- length(X_assign_m)
-    num_l2_m <- length(Z_assign_m)
-    if (sol_2$single_level)
+    num_l1_m <- length(X_assign_m) #num level 1 regressors in the mediator model
+    num_l2_m <- length(Z_assign_m) #num level 2 regressors in the mediator model
+    #Extract relevant coefficients in the mediator model
+    if (sol_2$single_level) {
       samples_l2_param_m <- sol_2$samples_l1_param
-    else
+    } else {
       samples_l2_param_m <- sol_2$samples_l2_param
+    }
     n_sample_m <- nrow(samples_l2_param_m)
     est_matrix_m <- array(0, dim = c(num_l1_m, num_l2_m, n_sample_m), dimnames = list(X_names_m, Z_names_m, NULL))
     for (i in 1:num_l1_m){
       for (j in 1:n_sample_m)
         est_matrix_m[i,,j] <- samples_l2_param_m[j,((i-1)*num_l2_m+1):((i-1)*num_l2_m+num_l2_m)]
     }
-    sol <- list()
     
+    sol <- list()
+    #Individal effects can be calculated the outome and mediator model are multi-level
     if (individual){
       model1_level1_var_matrix <- attr(attr(sol_1$mf1, 'terms'),'factors')
       model1_level1_var_dataClasses <- attr(attr(sol_1$mf1, 'terms'),'dataClasses')
@@ -56,8 +78,7 @@ BANOVA.mediation <-
       model2_level2_var_matrix <- attr(attr(sol_2$mf2, 'terms'),'factors')
       model2_level2_var_dataClasses <- attr(attr(sol_2$mf2, 'terms'),'dataClasses')
       
-      # used to extract the level 1 estimations fit_beta <- rstan::extract(out1$stan_fit, permuted = T)
-      if (sol_1$single_level){
+      if (sol_1$single_level || sol_2$single_level){
         stop("It seems to be a between-subject design, set individual = FALSE instead.")
       }
       fit_betas <- rstan::extract(sol_1$stan_fit, permuted = T)
@@ -84,7 +105,7 @@ BANOVA.mediation <-
       sol$dir_effects <- list()
       if (xvar %in% rownames(model1_level1_var_matrix)){
         sol$individual_direct <- list()
-        direct_effects <- cal.mediation.effects.individual(sol_1, samples_l1_individual, xvar, mediator)
+        direct_effects <- cal.mediation.effects.individual(sol_1, samples_l1_individual, xvar, "NA")
         for (i in 1:length(direct_effects)){
           # filter columns with only "1" or 1 (numeric), TODO: here 1 is hard coded, think about a better way to determine if it is numeric
           idx_to_rm <- c()
@@ -97,9 +118,19 @@ BANOVA.mediation <-
           else
             sol$dir_effects[[i]] <- direct_effects[[i]]$table_m
           sol$individual_direct[[i]] <- rabind(sol$dir_effects[[i]], id_map)
+          
+          #prepare a title for the table if moderation is present
+          interacting_variables <- attr(direct_effects[[i]], "interacting_variables")
+          if (!is.null(interacting_variables)){
+            element_name <- prepare_list_name(interacting_variables, mediator)
+            names(sol$dir_effects)[i] <- element_name
+            names(sol$individual_direct)[i]
+          }
+          
+          
         }
       }else{
-        direct_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, xvar, mediator)
+        direct_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, xvar, "NA")
         for (i in 1:length(direct_effects)){
           # filter columns with only "1" or 1 (numeric), TODO: here 1 is hard coded, think about a better way to determine if it is numeric
           idx_to_rm <- c()
@@ -112,12 +143,18 @@ BANOVA.mediation <-
           else
             sol$dir_effects[[i]] <- direct_effects[[i]]$table_m
           
+          #prepare a title for the table if moderation is present
+          interacting_variables <- attr(direct_effects[[i]], "interacting_variables")
+          if (!is.null(interacting_variables)){
+            element_name <- prepare_list_name(interacting_variables, xvar)
+            names(sol$dir_effects)[i] <- element_name
+          }
         }
       }
       
       # calculate (direct) effects of the mediator in model 1
       if (!(mediator %in% rownames(model1_level1_var_matrix))) stop("The mediator is between subjects, please set individual = FALSE.")
-      mediator_l1_effects <- cal.mediation.effects.individual(sol_1, samples_l1_individual, mediator, xvar, is_mediator = T)
+      mediator_l1_effects <- cal.mediation.effects.individual(sol_1, samples_l1_individual, mediator, xvar = "NA", is_mediator = T)
       sol$m1_effects <- list()
       for (i in 1:length(mediator_l1_effects)){
         # filter columns with only "1" or 1 (numeric), TODO: here 1 is hard coded, think about a better way to determine if it is numeric
@@ -131,6 +168,12 @@ BANOVA.mediation <-
         else
           sol$m1_effects[[i]] <- mediator_l1_effects[[i]]$table_m
         
+        #prepare a title for the table if moderation is present
+        interacting_variables <- attr(mediator_l1_effects[[i]], "interacting_variables")
+        if (!is.null(interacting_variables)){
+          element_name <- prepare_list_name(interacting_variables, mediator)
+          names(sol$m1_effects)[i] <- element_name
+        }
       }
       
       # calculate (direct) effects of the xvar on mediator (in model 2)
@@ -152,6 +195,12 @@ BANOVA.mediation <-
           else
             sol$m2_effects[[i]] <- mediator_xvar_effects[[i]]$table_m
           
+          interacting_variables <- attr(mediator_xvar_effects[[i]], "interacting_variables")
+          if (!is.null(interacting_variables)){
+            element_name <- prepare_list_name(interacting_variables, xvar)
+            names(sol$m2_effects)[i] <- element_name
+          }
+          
         }
       }else if (xvar %in% rownames(model2_level2_var_matrix)){
         mediator_xvar_effects <- cal.mediation.effects(sol_2, est_matrix_m, n_sample_m, xvar)
@@ -169,6 +218,11 @@ BANOVA.mediation <-
           else
             sol$m2_effects[[i]] <- mediator_xvar_effects[[i]]$table_m
           
+          interacting_variables <- attr(mediator_xvar_effects[[i]], "interacting_variables")
+          if (!is.null(interacting_variables)){
+            element_name <- prepare_list_name(interacting_variables, xvar)
+            names(sol$m2_effects)[i] <- element_name
+          }
         }
       }
       if (return_effects){
@@ -262,7 +316,7 @@ BANOVA.mediation <-
       }
       }
       ##################
-      # calculate direct effect of xvar in model 1
+      # calculate direct effect of xvar in model 1 (based on the outcome model)
       direct_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, xvar, mediator)
       sol$dir_effects <- list()
       for (i in 1:length(direct_effects)){
@@ -276,27 +330,40 @@ BANOVA.mediation <-
           sol$dir_effects[[i]] <- direct_effects[[i]]$table_m[, -idx_to_rm]
         else
           sol$dir_effects[[i]] <- direct_effects[[i]]$table_m
-  
+        
+        #prepare a title for the table if moderation is present
+        interacting_variables <- attr(direct_effects[[i]], "interacting_variables")
+        if (!is.null(interacting_variables)){
+          element_name <- prepare_list_name(interacting_variables, xvar)
+          names(sol$dir_effects)[i] <- element_name
+        }
       }
       
       # calculate effects of the mediator in model 1
       mediator_l1_effects <- cal.mediation.effects(sol_1, est_matrix, n_sample, mediator, xvar = "NA")
       sol$m1_effects <- list()
       for (i in 1:length(mediator_l1_effects)){
+        temp_table <- mediator_l1_effects[[i]]$table_m
         # filter columns with only "1" or 1 (numeric), TODO: here 1 is hard coded, think about a better way to determine if it is numeric
         idx_to_rm <- c()
-        for (j in 1:ncol(mediator_l1_effects[[i]]$table_m)){
-          if (all(mediator_l1_effects[[i]]$table_m[, j] == '1') || all(mediator_l1_effects[[i]]$table_m[, j] == 1))
+        for (j in 1:ncol(temp_table)){
+          if (all(temp_table[, j] == '1') || all(temp_table[, j] == 1))
             idx_to_rm <- c(idx_to_rm, j)
         }
         if(length(idx_to_rm) > 0)
-          sol$m1_effects[[i]] <- mediator_l1_effects[[i]]$table_m[, -idx_to_rm]
+          sol$m1_effects[[i]] <- temp_table[, -idx_to_rm]
         else
-          sol$m1_effects[[i]] <- mediator_l1_effects[[i]]$table_m
+          sol$m1_effects[[i]] <- temp_table
         
+        #prepare a title for the table if moderation is present
+        interacting_variables <- attr(mediator_l1_effects[[i]], "interacting_variables")
+        if (!is.null(interacting_variables)){
+          element_name <- prepare_list_name(interacting_variables, mediator)
+          names(sol$m1_effects)[i] <- element_name
+        }
       }
       # calculate effects of the xvar in model 2
-      mediator_xvar_effects <- cal.mediation.effects(sol_2, est_matrix_m, n_sample_m, xvar)
+      mediator_xvar_effects <- cal.mediation.effects(sol_2, est_matrix_m, n_sample_m, xvar, "NA")
       sol$m2_effects <- list()
       for (i in 1:length(mediator_xvar_effects)){
         mediator_xvar_effects[[i]]$table_m <- cbind(array(1, dim = c(nrow(mediator_xvar_effects[[i]]$table_m), 1), dimnames = list(NULL, mediator)), mediator_xvar_effects[[i]]$table_m)
@@ -311,6 +378,13 @@ BANOVA.mediation <-
           sol$m2_effects[[i]] <- mediator_xvar_effects[[i]]$table_m[, -idx_to_rm]
         else
           sol$m2_effects[[i]] <- mediator_xvar_effects[[i]]$table_m
+        
+        #prepare a title for the table if moderation is present
+        interacting_variables <- attr(mediator_xvar_effects[[i]], "interacting_variables")
+        if (!is.null(interacting_variables)){
+          element_name <- prepare_list_name(interacting_variables, xvar)
+          names(sol$m2_effects)[i] <- element_name
+        }
       }
   
       k <- 1
@@ -320,13 +394,11 @@ BANOVA.mediation <-
         sol$direct_effects_samples <- direct_effects
         sol$indirect_effects_samples <- list()
       }
-      for (i in 1:length(mediator_l1_effects))
+      # calculate effects of the xvar in model 2
+      for (i in 1:length(mediator_l1_effects)){
         for (j in 1:length(mediator_xvar_effects)){
-
           comb_eff <- combine.effects(mediator_l1_effects[[i]], mediator_xvar_effects[[j]], sol_1$tau_ySq, 
                                       sol_1$data, mediator, return_effects)
-          
-
           indirect_effects <- comb_eff$table
           sol$effect_size[[k]] <- comb_eff$effect_size
           if (return_effects){
@@ -338,14 +410,15 @@ BANOVA.mediation <-
             if (all(indirect_effects[, j] == '1') || all(indirect_effects[, j] == 1))
               idx_to_rm <- c(idx_to_rm, j)
           }
+          
           if(length(idx_to_rm) > 0)
               sol$indir_effects[[k]] <- indirect_effects[, -idx_to_rm]
           else
               sol$indir_effects[[k]] <- indirect_effects
           
-         
           k <- k + 1
         }
+      }
       sol$xvar = xvar
       sol$mediator = mediator
       sol$individual = individual
@@ -438,53 +511,78 @@ combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effec
   }
   return(return_list)
 }
+# mediator_l1_effects = mediator_l1_effects[[i]]
+# mediator_xvar_effects =mediator_xvar_effects[[1]]
+# tau_ySq = sol_1$tau_ySq
+# data = sol_1$data
+# mediator  = mediator
+
+
+
 
 combine.effects <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq, data, mediator,
                              return_effects){
-  table_1_names <- mediator_l1_effects$index_name
-  table_2_names <- mediator_xvar_effects$index_name
-  # find common columns 
+  table_1_names <- mediator_l1_effects$index_name   #indexing of the table with direct effects of mediator
+  table_2_names <- mediator_xvar_effects$index_name #indexing of the table with indirect effects of xvar
+  #Prepare tables with variables and corresponding index of the effects
   temp_1 <- mediator_l1_effects$index
   colnames(temp_1) <- paste(colnames(temp_1), '.1', sep = "")
-  table_1_names_index <- cbind(table_1_names, temp_1)
+  table_1_names_index.df <- cbind(table_1_names, temp_1)
   temp_2 <- mediator_xvar_effects$index
   colnames(temp_2) <- paste(colnames(temp_2), '.2', sep = "")
-  table_2_names_index <- cbind(table_2_names, temp_2)
-  table_2_names_index.df <- table_2_names_index
-  table_1_names_index.df <- table_1_names_index
-  temp_table_index <- merge(table_2_names_index.df, table_1_names_index.df, by = intersect(colnames(table_1_names), colnames(table_2_names)), all.x = T)
+  table_2_names_index.df <- cbind(table_2_names, temp_2)
+  temp_table_index <- merge(table_2_names_index.df, table_1_names_index.df, 
+                            by = intersect(colnames(table_1_names), colnames(table_2_names)), all.x = T)
+  #TODO: what's really going on here?
+  if(all(is.na(temp_table_index[colnames(temp_1)]))){
+    temp_table_index[colnames(temp_1)] <- table_1_names_index.df[, colnames(temp_1)]
+  }
+  #Final indexing of tables
   table_1_est_sample_index <- temp_table_index[,colnames(temp_1), drop = F]
   table_2_est_sample_index <- temp_table_index[,colnames(temp_2), drop = F]
-  # standardize the names of this table, so that the output table looks consistant, direct vs indirect, e.g. sort the column names
+  # standardize the names of this table, so that the output table looks consistant, direct vs indirect
+  # e.g. sort the column names
   union_names <- union(colnames(table_1_names), colnames(table_2_names))
   union_names <- union_names[order(union_names)]
-  #result_table <- array('1', dim = c(nrow(temp_table_index), ncol(temp_table_index) - 4 + 3 + 1), dimnames = list(rep("",nrow(temp_table_index)), c(union_names, 'mean', '2.5%', '97.5%', 'p.value')))
-  result_table <- array('1', dim = c(nrow(temp_table_index), length(union_names) + 4), 
-                        dimnames = list(rep("",nrow(temp_table_index)), c(union_names, 'mean', '2.5%', '97.5%', 'p.value')))
+  
+  #Number of samples in the calculation should be the same for the direct and indirect effects
   common_n_sample <- min(dim(mediator_l1_effects$samples)[3], dim(mediator_xvar_effects$samples)[3])
-  result_table_sample <- array('1', dim = c(nrow(temp_table_index), length(union_names) + common_n_sample), dimnames = list(rep("",nrow(temp_table_index)), c(union_names, paste('s_', 1:common_n_sample, sep = ""))))
+  #Prepare results
+  result_table        <- array('1', dim = c(nrow(temp_table_index), length(union_names) + 4), 
+                               dimnames = list(rep("",nrow(temp_table_index)), 
+                                               c(union_names, 'mean', '2.5%', '97.5%', 'p.value')))
+  result_table_sample <- array('1', dim = c(nrow(temp_table_index), length(union_names) + common_n_sample), 
+                               dimnames = list(rep("",nrow(temp_table_index)), 
+                                               c(union_names, paste('s_', 1:common_n_sample, sep = ""))))
   return_samples <- data.frame(matrix(nrow = nrow(temp_table_index),  ncol = length(union_names) + common_n_sample))
   colnames(return_samples) <- c(union_names, paste('s_', 1:common_n_sample, sep = ""))
-  for (nm in union_names){
-    result_table[, nm] <- as.character(temp_table_index[[nm]])
-    result_table_sample[, nm] <- as.character(temp_table_index[[nm]])
-    return_samples[, nm] <- as.character(temp_table_index[[nm]])
+  for (name in union_names){
+    result_table[, name]        <- as.character(temp_table_index[[name]])
+    result_table_sample[, name] <- as.character(temp_table_index[[name]])
+    return_samples[, name ]      <- as.character(temp_table_index[[name]])
   }
+  #Fill in the table with results by row
   for (ind in 1:nrow(table_1_est_sample_index)){
+    #Selct and multiply samples
     m_samples <- mediator_l1_effects$samples[as.integer(table_1_est_sample_index[ind,1]), as.integer(table_1_est_sample_index[ind,2]), 1:common_n_sample] * 
       mediator_xvar_effects$samples[as.integer(table_2_est_sample_index[ind,1]), as.integer(table_2_est_sample_index[ind,2]), 1:common_n_sample]
+    #Calculate summary statistics
     result_table[ind,'mean'] <- round(mean(m_samples), 4)
-    result_table[ind,c('2.5%', '97.5%')] <- round(quantile(m_samples, probs = c(0.025, 0.975)),4)
+    result_table[ind,c('2.5%', '97.5%')] <- round(quantile(m_samples, probs = c(0.025, 0.975)), 4)
     result_table[ind,'p.value'] <- ifelse(round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4) == 0, '<0.0001', round(pValues(array(m_samples, dim = c(length(m_samples), 1))), 4))
+    #Prepare samples to be returned
     result_table_sample[ind, paste('s_', 1:common_n_sample, sep = "")] <- m_samples
     return_samples[ind, paste('s_', 1:common_n_sample, sep = "")] <- m_samples
   }
-  # compute effect size for the indirect effect
+  
+  ######Compute effect size for the indirect effect
+  
+  #Remove mediator and intercept form the union of names
   if (mediator %in% union_names)
     union_names <- union_names[-which(union_names == mediator)]
   if ('(Intercept)' %in% union_names)
     union_names <- union_names[-which(union_names == '(Intercept)')]
-  # remove numeric variable
+  #Remove numeric variable
   to_rm <- c()
   for (i in 1:length(union_names)){
     if (is.numeric(data[,union_names[i]])){
@@ -493,13 +591,17 @@ combine.effects <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq
   }
   if (length(to_rm) > 0)
     union_names <- union_names[-to_rm]
-  data_eff <- data[, union_names, drop = F]
+  
+  #Select relevant columns 
+  data_eff        <- data[, union_names, drop = F]
   data_eff_sample <- merge(data_eff, result_table_sample, by = union_names, all.x = TRUE)
   data_eff_sample <- apply(data_eff_sample[, paste('s_', 1:common_n_sample, sep = "")], 2, as.character)
   data_eff_sample <- apply(data_eff_sample, 2, as.numeric)
-  var_sample <- apply(data_eff_sample, 2, var)
+  
+  var_sample <- apply(data_eff_sample, 2, var) #variance by column
   eff_sample <- var_sample/(var_sample + tau_ySq)
   effect_size <- paste(round(mean(eff_sample), 3), " (", paste(round(quantile(eff_sample, probs = c(0.025, 0.975), na.rm = T),3), collapse = ','), ")", sep="")
+  
   #sort values column by column
   result_table <- data.frame(result_table, check.names=FALSE)
   result_table <- result_table[do.call(order, result_table), ]
