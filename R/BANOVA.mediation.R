@@ -10,7 +10,7 @@ BANOVA.mediation <-
       if (length(moderators) > 1){
         moderators <- paste(moderators, collapse ="_and_")
       }
-      title <- paste0("simple_effects_of_", moderated_var, "_at_levels_of_",moderators)
+      title <- paste0("Simple_effects_of_", moderated_var, "_moderated_by_",moderators)
       return(title)
     }
     
@@ -399,6 +399,7 @@ BANOVA.mediation <-
         for (j in 1:length(mediator_xvar_effects)){
           comb_eff <- combine.effects(mediator_l1_effects[[i]], mediator_xvar_effects[[j]], sol_1$tau_ySq, 
                                       sol_1$data, mediator, return_effects)
+          
           indirect_effects <- comb_eff$table
           sol$effect_size[[k]] <- comb_eff$effect_size
           if (return_effects){
@@ -411,11 +412,28 @@ BANOVA.mediation <-
               idx_to_rm <- c(idx_to_rm, j)
           }
           
-          if(length(idx_to_rm) > 0)
-              sol$indir_effects[[k]] <- indirect_effects[, -idx_to_rm]
-          else
-              sol$indir_effects[[k]] <- indirect_effects
+          if(length(idx_to_rm) > 0){
+            sol$indir_effects[[k]] <- indirect_effects[, -idx_to_rm]
+          } else {
+            sol$indir_effects[[k]] <- indirect_effects
+          }
+          #Prepare label for the table
+          name_effect_X_on_M <- names(sol$m2_effects[1])
+          #print(name_effect_X_on_M)
+          if (is.null(name_effect_X_on_M)){
+            table_label <- paste0("Indirect_effect_of_", xvar)
+          } else {
+            name_effect_X_on_M <- gsub("Simple_effects_of_", "", name_effect_X_on_M)
+            table_label <- paste0("Indirect_effect_of_", name_effect_X_on_M)
+          }
           
+          name_effect_M_on_Y <- names(sol$m1_effects[i])
+          if (!is.null(name_effect_M_on_Y)){
+            name_effect_M_on_Y <- gsub("Simple_effects_of_", "", name_effect_M_on_Y)
+            table_label <- paste0(table_label, "_through_", name_effect_M_on_Y)
+          }
+          names(sol$indir_effects)[k] <- table_label
+      
           k <- k + 1
         }
       }
@@ -511,14 +529,6 @@ combine.effects.individual <- function (mediator_l1_effects, mediator_xvar_effec
   }
   return(return_list)
 }
-# mediator_l1_effects = mediator_l1_effects[[i]]
-# mediator_xvar_effects =mediator_xvar_effects[[1]]
-# tau_ySq = sol_1$tau_ySq
-# data = sol_1$data
-# mediator  = mediator
-
-
-
 
 combine.effects <- function (mediator_l1_effects, mediator_xvar_effects, tau_ySq, data, mediator,
                              return_effects){
