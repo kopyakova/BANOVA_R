@@ -1,3 +1,21 @@
+#' Mediation analysis with multiple possibly correlated mediators
+#' 
+#' \code{BANOVA.multi.mediation} is a function for analysis of multiple possibly correlated mediators.
+#' These mediators are assumed to have no causal influence on each other. 
+#' Both single-level and multi-level models can be analyzed. 
+#' @usage BANOVA.simple(sol_1, sol_2, xvar, mediators, individual = FALSE)
+#' @param sol_1 an object of class "BANOVA" returned by BANOVA.run function, which contains an 
+#' outcome of the analysis for Normal, T,  Poisson,  Bernoulli,  Binomial, or ordered Multinomial
+#' outcome variables regressed on a casusal variable, mediators, and other possible moderators and 
+#' control variables.
+#' @param sol_2 an object of class "BANOVA" returned by BANOVA.run function, which contains an 
+#' outcome of the analysis for multiple Multivariate Normal mediators regressed on a casusal variable
+#' and other other possible moderators and control variables.
+#' @param xvar a character string which specifies the name of the causal variable.
+#' @param mediators a character vector with names of the mediators.
+#' @param individual logical indicator of whether results should be reported for individual units in 
+#' @author Anna Kopyakova
+#' @export
 BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F){
   #adapts the design matrix of a multivariate sol_2 to work with BANOVA.mediaation
   adapt.design.matrix <- function(dMatrice, mediator){
@@ -282,7 +300,8 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     return(dir_eff_samples_df)
   }
   
-  #calculate total effects of a causal variable
+  #calculate total effects of a causal variable - not used. 
+  #This function is correct only for sol_1 with Normal dependent variables
   combine_direct_and_indirect_effects <- function(dir_eff_samples_df, total_indir_eff_samples_list){
     total_eff_table_list <- list() 
     num_indir_eff_tables <- length(total_indir_eff_samples_list)
@@ -422,12 +441,12 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
           dim(samples_beta1) <- c(dim_beta1[1],dim_beta1[2],1)
         }
         sol <- BANOVA.mediation(sol_1, sol_2 = temp_solution, xvar=xvar, mediator=mediator,
-                                individual = individual, return_effects = T,
+                                individual = individual, return_posterior_samples = T,
                                 multi_samples_beta1_raw_m = samples_beta1)
       }
     } else {
       sol <- BANOVA.mediation(sol_1, sol_2 = temp_solution, xvar=xvar, mediator=mediator,
-                              individual = individual, return_effects = T)
+                              individual = individual, return_posterior_samples = T)
     }
    intermediate_results[[mediator]] <- sol
   }
@@ -557,7 +576,8 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     final_results <- save.tables.with.total.effects(total_indirect_effects_results$total_indirect_effects, 
                                    num_tables_with_indirect_effects,
                                    "total_indir_effects")
-
+    
+    #Calculation is correct only for sol_1 with Normal dependent variables
     # #######Report total effects of the causal variable#######
     # #Extract total indirect effects
     # total_indir_eff_samples <- total_indirect_effects_results$total_indirect_effects_samples
