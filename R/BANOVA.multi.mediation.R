@@ -3,19 +3,80 @@
 #' \code{BANOVA.multi.mediation} is a function for analysis of multiple possibly correlated mediators.
 #' These mediators are assumed to have no causal influence on each other. 
 #' Both single-level and multi-level models can be analyzed. 
-#' @usage BANOVA.simple(sol_1, sol_2, xvar, mediators, individual = FALSE)
-#' @param sol_1 an object of class "BANOVA" returned by BANOVA.run function, which contains an 
-#' outcome of the analysis for Normal, T,  Poisson,  Bernoulli,  Binomial, or ordered Multinomial
-#' outcome variables regressed on a casusal variable, mediators, and other possible moderators and 
-#' control variables.
+#' @usage BANOVA.multi.mediation(sol_1, sol_2, xvar, mediators, individual = FALSE)
+#' @param sol_1 an  object  of  class  "BANOVA"  returned  by  BANOVA.run  function with  a fitted 
+#' model for an outcome variable regressed on a causal variable, a mediator, and, possibly, 
+#' moderators and control variables. The outcome variable can follow Normal, T, Poisson, Bernoulli, 
+#' Binomial, and ordered Multinomial distributions.
 #' @param sol_2 an object of class "BANOVA" returned by BANOVA.run function, which contains an 
-#' outcome of the analysis for multiple Multivariate Normal mediators regressed on a casusal variable
-#' and other other possible moderators and control variables.
-#' @param xvar a character string which specifies the name of the causal variable.
-#' @param mediators a character vector with names of the mediators.
-#' @param individual logical indicator of whether results should be reported for individual units in 
+#' outcome of the analysis for multiple Multivariate Normal mediators regressed on a casual variable
+#' and other possible moderators and control variables.
+#' @param xvar a character string that specifies the name of the causal variable used in both models.
+#' @param mediators a vector with character strings, which specifies the names of the mediator 
+#' variables used in the models.
+#' @param individual logical  indicator  of  whether to output effects for individual units in the 
+#' analysis (TRUE or FALSE). This analysis requires a multilevel \code{sol_1}.
+#' @return Returns an object of class \code{"BANOVA.multi.mediation"}. The returned object is a list 
+#' containing:
+#
+#' \item{\code{dir_effects}}{table or tables with the direct effect.}
+#' \item{\code{individual_direct}}{is returned if \code{individual} is set to \code{TRUE} and the 
+#' causal variable is a within-subject variable. Contains a table or tables of the direct effect at 
+#' the individual levels of the analysis}
+#' \item{\code{m1_effects}}{a list with tables of the effects of the mediator on the outcome}
+#' \item{\code{m2_effects}}{a list with tables of the effect of the causal variable on the mediator}
+#' \item{indir_effects}{tables of the indirect effect}
+#' \item{individual_indirect}{is returned if \code{individual} is set to \code{TRUE} and the
+#'  mediator is a within-subject variable. Contains the table or tables with the indirect effect}
+#' \item{effect_sizes}{a list with effect sizes on individual mediators}
+#' \item{total_indir_effects}{table or tables with the total indirect effect of the causal variable}
+#' \item{xvar}{the name of the causal variable}
+#' \item{mediators}{the names of the mediating variables}
+#' \item{individual}{the value of the argument individual (TRUE or FALSE)}
+#' @details The function extends \code{BANOVA.mediation} to the case with multiple possibly 
+#' correlated mediators. For details about mediation analysis performed in BANOVA see
+#' the help page for the \link[BANOVA]{BANOVA.mediation}.
+#' 
+#' \code{BANOVA.multi.mediation} estimates and tests specific indirect effects of the causal 
+#' variable conveyed through each mediator. Furthermore, the total indirect effect of the causal
+#' variables are computed as a sum of the specific indirect effects.
+#' 
+#' The function prints multiple tables with mediated effects. Tables with direct effects of the 
+#' causal variable and mediators on the outcome variable, as well as direct effects of the causal
+#' variable on the mediators include a posterior mean and 95\% credible intervals of the effects. 
+#' Next, the function displays on the console tables with specific indirect effects and effect sizes 
+#' of the mediators, followed by the TIE of the causal variable. These tables include the mean, 
+#' 95\% credible intervals, and two-sided Bayesian p-values.
+#' @examples 
+#' # Use the colorad data set
+#' data(colorad)
+#' # Add a second mediator to the data set
+#' colorad$blur_squared <- (colorad$blur)^2
+#' # Prepare mediators to be analyzed in the Multivariate Normal model
+#' mediators <- cbind(colorad$blur, colorad$blur_squared)
+#' colnames(mediators) <- c("blur", "blur_squared")
+#' colorad$mediators <- mediators
+#' \donttest{
+#' # Build and analyze the model for the outcome variable
+#' model <- BANOVA.model('Binomial')
+#' banova_binom_model <- BANOVA.build(model)
+#' res_1 <- BANOVA.run(y ~ typic, ~ color + blur + blur_squared, fit = banova_binom_model,
+#'                     data = colorad, id = 'id', num_trials = as.integer(16), 
+#'                     iter = 2000, thin = 1, chains = 2)
+#' # Build and analyze the model for the mediators
+#' model <- BANOVA.model('multiNormal')
+#' banova_multi_norm_model <- BANOVA.build(model)
+#' res_2 <- BANOVA.run(mediators ~ typic, ~ color, fit = banova_multi_norm_model,
+#'                     data = colorad, id = 'id', iter = 2000, thin = 1, chains = 2)
+#'                     
+#' # Calculate (moderated) effects of "typic" mediated by "blur" and "blur_squared"
+#' results <- BANOVA.multi.mediation(res_1, res_2, xvar='typic', mediators=c("blur", "blur_squared"))
+#' }
 #' @author Anna Kopyakova
 #' @export
+
+#results <- BANOVA.multi.mediation(res_1, res_2, xvar='typic', mediators=c("blur", "blur_squared"))
+                              
 BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F){
   #adapts the design matrix of a multivariate sol_2 to work with BANOVA.mediaation
   adapt.design.matrix <- function(dMatrice, mediator){

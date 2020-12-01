@@ -1,16 +1,17 @@
 results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_level = F){
-  #' This function combines tables for the multivariate (normal) models. The results for multivariate 
-  #' models are first obtained for each individual dependent variable (in a for loop) and then is 
-  #' combined in this function.
-  #' @param list_with_tables list with tables to be combined. Each element in the list is expected 
-  #' to have a name of the corresponding dependent variabel (for example "y1", "y2", etc). 
-  #' list_with_tables[["y1"]] is expected to have one or more elemnts which are matrices or data frames
-  #' @param list_names_first logical. If TRUE the rownames of tables have the names of dependent 
-  #' variables first, followed by default rownames (for example "y1 (Intercept)"). 
+  
+  # This function combines tables for the multivariate (normal) models. The results for multivariate 
+  # models are first obtained for each individual dependent variable (in a for loop) and then is 
+  # combined in this function.
+  # @param list_with_tables list with tables to be combined. Each element in the list is expected 
+  # to have a name of the corresponding dependent variabel (for example "y1", "y2", etc). 
+  # list_with_tables[["y1"]] is expected to have one or more elemnts which are matrices or data frames
+  # @param list_names_first logical. If TRUE the rownames of tables have the names of dependent 
+  # variables first, followed by default rownames (for example "y1 (Intercept)"). 
   #' If FLASE default rownames are followed by variable names  (for example "(Intercept) y1")
-  #' @param list_elements_length numeric. how many elemnts are in each list (must be the same for all dep vars)
-  #' @param anova logical. Used to assign a class of the tables
-  #' @param conv logical. Used to assign a class of the tables
+  # @param list_elements_length numeric. how many elemnts are in each list (must be the same for all dep vars)
+  # @param anova logical. Used to assign a class of the tables
+  # @param conv logical. Used to assign a class of the tables
   combine.tables <- function(list_with_tables, list_names_first = T, list_elements_length = 1,
                                        anova = F, conv = F){
     combine <- function(list_with_tables, element_name = "NA"){
@@ -121,7 +122,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
     #format pValues
     n_columns <- ncol(result)
     p_values  <- as.numeric(result[,  n_columns])
-    result[, ncol(result)] <- ifelse(round(p_values, 4) == 0, '<0.0001', table[,  n_columns])
+    result[, n_columns] <- ifelse(round(p_values, 4) == 0, '<0.0001', result[,  n_columns])
     colnames(result) <- c("Mean", "SD", "Quantile 0.025", "Quantile 0.975", "p-value")
     return(result)
   }

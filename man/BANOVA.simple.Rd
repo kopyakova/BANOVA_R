@@ -35,8 +35,8 @@ for all levels of all factors and their combinations that are interacting with a
 \description{
 \code{BANOVA.simple} is a function for probing interaction effects in models where
 both  moderator  and  explanatory  variables  are  factors  with an arbitrary  number 
-of levels. The function estimates and tests simple or partial effects, also known as simple main 
-effects. Both single-level and multi-level models with any of the distributions accommodated in 
+of levels. The function estimates and tests simple or partial effects, also known as simple main
+or conditional effects. Both single-level and multi-level models with any of the distributions accommodated in 
 the package can be analyzed.
 }
 \details{
@@ -69,7 +69,7 @@ model <- BANOVA.model('Binomial')
 banova_model <- BANOVA.build(model)
 res_1 <- BANOVA.run(y ~ typic, ~ color*blurfac, fit = banova_model,
                     data = colorad, id = 'id', num_trials = as.integer(16), 
-                    iter = 2000, thin = 5, chains = 2)
+                    iter = 2000, thin = 1, chains = 2)
 # Calculate simple effects with "blurfac" as a moderating vriable
 simple_effects <- BANOVA.simple(BANOVA_output = res_1, base = "blurfac")
 }

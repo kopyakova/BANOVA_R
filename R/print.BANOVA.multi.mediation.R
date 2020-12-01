@@ -88,10 +88,5 @@ print.BANOVA.multi.mediation <-
                 "on the outcome variables\n\n"))
       print.effects(x$total_indir_effects)
       
-      # #Report total effects of the causal variable
-      # cat(paste(strrep("-", 100), '\n'))
-      # cat(paste("Total effects of the causal variable", xvar, 
-      #           "on the outcome variables\n\n"))
-      # print.effects(x$total_effects)
     }
   }

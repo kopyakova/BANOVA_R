@@ -2,8 +2,8 @@
 #' 
 #' \code{BANOVA.simple} is a function for probing interaction effects in models where
 #' both  moderator  and  explanatory  variables  are  factors  with an arbitrary  number 
-#' of levels. The function estimates and tests simple or partial effects, also known as simple main 
-#' effects. Both single-level and multi-level models with any of the distributions accommodated in 
+#' of levels. The function estimates and tests simple or partial effects, also known as simple main
+#' or conditional effects. Both single-level and multi-level models with any of the distributions accommodated in 
 #' the package can be analyzed. 
 #' @usage BANOVA.simple(BANOVA_output, base = NULL, quantiles = c(0.025, 0.975), 
 #' dep_var_name = NULL, return_posterior_samples = FALSE)
@@ -25,10 +25,6 @@
 #' \item{\code{samples_simple_effects}}{if \code{return_posterior_samples} is set to \code{TRUE} 
 #' a list of tables with samples of the posterior simple effects is returned. The tables include results
 #' for all levels of all factors and their combinations that are interacting with a moderating variable.}
-
-#' @item results_summary a list of tables with results. 
-#' @item simple_effects If \code{return_posterior_samples} is \code{TRUE} lists 
-#' with samples of the posterior simple effects are also returned.
 #' @details  The function identifies all factors and their combinations that are interacting with a moderating of "base"
 #' variable. For each interaction, it determines all possible level combinations of the involved regressors,
 #' which are further used to combine the posterior samples of the selected regression coefficients to calculate 
@@ -57,7 +53,7 @@
 #' banova_model <- BANOVA.build(model)
 #' res_1 <- BANOVA.run(y ~ typic, ~ color*blurfac, fit = banova_model,
 #'                     data = colorad, id = 'id', num_trials = as.integer(16), 
-#'                     iter = 2000, thin = 5, chains = 2)
+#'                     iter = 2000, thin = 1, chains = 2)
 #' # Calculate simple effects with "blurfac" as a moderating vriable
 #' simple_effects <- BANOVA.simple(BANOVA_output = res_1, base = "blurfac")
 #' }
