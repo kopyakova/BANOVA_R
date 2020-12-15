@@ -583,21 +583,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
                                    num_tables_with_indirect_effects,
                                    "total_indir_effects")
     
-    # #######Report total individual effects of the causal variable#######
-    # total_indir_eff_samples <- total_indirect_effects_results$total_indirect_effects_samples
-    # dir_eff_samples         <- prepare.direct.effects.df()
-    # total_effects <- combine_direct_and_indirect_effects(dir_eff_samples, total_indir_eff_samples)
-    # #add an original id to the table
-    # total_effects <- add.an.original.id(total_effects, id_map, T)
-    # #print and save total individual effects
-    # cat(paste(strrep("-", 100), '\n'))
-    # cat(paste("Total individual effects of the causal variable", xvar, 
-    #                  "on the outcome variables\n\n"))
-    # num_tables_with_total_effects <- length(total_effects)
-    # print.tables.with.total.effects(total_effects, num_tables_with_total_effects)
-    # final_results <- save.tables.with.total.effects(total_effects, num_tables_with_total_effects,
-    #                                "total_effects")
-    
   } ######Genral effects#####
   else{
     #######Report direct effects of the causal variable on the outcome#######
@@ -655,21 +640,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     final_results <- save.tables.with.total.effects(total_indirect_effects_results$total_indirect_effects, 
                                    num_tables_with_indirect_effects,
                                    "total_indir_effects")
-    
-    #Calculation is correct only for sol_1 with Normal dependent variables
-    # #######Report total effects of the causal variable#######
-    # #Extract total indirect effects
-    # total_indir_eff_samples <- total_indirect_effects_results$total_indirect_effects_samples
-    # dir_eff_samples         <- prepare.direct.effects.df()
-    # total_effects <- combine_direct_and_indirect_effects(dir_eff_samples, total_indir_eff_samples)
-    # 
-    # num_tables_with_total_effects <- length(total_effects)
-    # cat(paste(strrep("-", 100), '\n'))
-    # cat(paste("Total effects of the causal variable", xvar, 
-    #                  "on the outcome variables\n\n"))
-    # print.tables.with.total.effects(total_effects, num_tables_with_total_effects)
-    # final_results <- save.tables.with.total.effects(total_effects, num_tables_with_total_effects,
-    #                                "total_effects")
   }
   final_results$xvar <- xvar
   final_results$mediators <- mediators

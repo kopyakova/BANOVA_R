@@ -15,7 +15,7 @@ BANOVA.mediation <-
           moderators <- paste(moderators, collapse ="_and_")
         } 
         if (num_moderators!=0){
-          title <- paste0("Simple_effects_of_", moderated_var, "_moderated_by_", moderators)
+          title <- paste0("Direct_effects_of_", moderated_var, "_moderated_by_", moderators)
         } else {
           title <- NULL
         }
@@ -260,13 +260,13 @@ BANOVA.mediation <-
           #Prepare a label for the table with indirect effects
           if (sum(is.null(name_effect_X_on_M), is.null(name_effect_M_on_Y)) != 2){
             if (is.null(name_effect_X_on_M)){
-              table_label <- paste0("Indirect_effect_of_", xvar)
+              table_label <- paste0("Indirect_effects_of_", xvar)
             } else {
-              name_effect_X_on_M <- gsub("Simple_effects_of_", "", name_effect_X_on_M)
-              table_label <- paste0("Indirect_effect_of_", name_effect_X_on_M)
+              name_effect_X_on_M <- gsub("Direct_effects_of_", "", name_effect_X_on_M)
+              table_label <- paste0("Indirect_effects_of_", name_effect_X_on_M)
             }
             if (!is.null(name_effect_M_on_Y)){
-              name_effect_M_on_Y <- gsub("Simple_effects_of_", "", name_effect_M_on_Y)
+              name_effect_M_on_Y <- gsub("Direct_effects_of_", "", name_effect_M_on_Y)
               table_label <- paste0(table_label, "_through_", name_effect_M_on_Y)
             }
             names(sol$indir_effects)[k] <- table_label
@@ -434,13 +434,13 @@ BANOVA.mediation <-
           #Prepare a label for the table with indirect effects
           if (sum(is.null(name_effect_X_on_M), is.null(name_effect_M_on_Y)) !=2){
             if (is.null(name_effect_X_on_M)){
-              table_label <- paste0("Indirect_effect_of_", xvar)
+              table_label <- paste0("Indirect_effects_of_", xvar)
             } else {
-              name_effect_X_on_M <- gsub("Simple_effects_of_", "", name_effect_X_on_M)
-              table_label <- paste0("Indirect_effect_of_", name_effect_X_on_M)
+              name_effect_X_on_M <- gsub("Direct_effects_of_", "", name_effect_X_on_M)
+              table_label <- paste0("Indirect_effects_of_", name_effect_X_on_M)
             }
             if (!is.null(name_effect_M_on_Y)){
-              name_effect_M_on_Y <- gsub("Simple_effects_of_", "", name_effect_M_on_Y)
+              name_effect_M_on_Y <- gsub("Direct_effects_of_", "", name_effect_M_on_Y)
               table_label <- paste0(table_label, "_through_", name_effect_M_on_Y)
             }
             names(sol$indir_effects)[k] <- table_label
