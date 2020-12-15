@@ -1,11 +1,12 @@
 print.BANOVA.mediation <- 
   function(x, ...){
-    #cat('Direct effect of', x$xvar,':\n')
-    #for (i in 1:length(x$dir_effects))
-      #print(noquote(x$dir_effects[[i]]), row.names = F)
     if (x$individual){
       cat('Indirect effect of', x$xvar,':\n')
-      for (i in 1:length(x$indir_effects)){
+      for (i in 1:length(x$individual_indirect)){
+        table_name <- names(x$individual_indirect)[i]
+        if (!is.null(table_name)){
+          cat(gsub("_", " ", table_name),'\n')
+        }
         print(noquote(x$individual_indirect[[i]]), row.names = F)
       }
     }else{

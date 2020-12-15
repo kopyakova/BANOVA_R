@@ -172,6 +172,15 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     for (i in 1:num_tables){
       #extract a table
       new_table <- list_with_results[[i]] 
+      
+      table_name <- names(list_with_results)[i]
+      if (!is.null(table_name)){
+        table_name <- gsub("_", " ", table_name)
+        extra_title <- paste0(table_name, "\n")
+      } else {
+        extra_title <- NULL
+      }
+      
       #print a table
       temp_result  <- print.table(new_table, skip_n_last_cols, extra_title, prev_table, i)
       #extract an indicator of whether the table was skipped or not
@@ -219,7 +228,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
   }
   
   calculate.total.indirect.effects <- function(used_tables_index){
-    ind_eff_samples      <- list()
+    ind_eff_samples <- list()
     #Exract relevant samples of indirect effects
     for (mediator in mediators){
       used_tables <- used_tables_index[[mediator]]
@@ -278,8 +287,7 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
       for (n in 2:num_mediators){
         common_columns <- intersect(common_columns, colnames(ind_eff_samples[[n]][[i]])[!smpl_indicator])
       }
-      num_common_columns <- length(common_columns)
-      
+    
       #Combine tables
       for (n in 2:num_mediators){
         temp_table1 <- combined_table[, 1:common_samples]
@@ -292,7 +300,12 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
         combined_table[, num_non_smpl_columns:common_samples] <-  temp1 + temp2
       }
       total_indirect_effects_samples <- combined_table[, c(smpl_columns)]
-    
+      
+      if(is.numeric(sol_1$data[, xvar])){
+        common_columns <- common_columns[common_columns != xvar]
+      }
+      num_common_columns <- length(common_columns)
+      
       #Prepare final results
       total_indirect_effects <- data.frame(matrix(NA, nrow = nrow(combined_table), ncol = num_common_columns+4))
       colnames(total_indirect_effects) <- c(common_columns, "mean","2.5%","97.5%","p.value")
@@ -536,9 +549,17 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
       final_results[["individual_indirect"]][[mediator]] <- intermediate_results[[mediator]][["individual_indirect"]]
       
       #######Report individual indirect effects of the causal variable#######
+      table_name <- names(intermediate_results[[mediator]]$indir_effects)
+      if (!is.null(table_name)){
+        string1 <- strsplit(table_name, xvar, fixed = F)[[1]][1]
+        string1 <- gsub("_", " ", string1)
+        string2 <- strsplit(table_name, mediator, fixed = F)[[1]][2]
+        string2 <- gsub("_", " ", string2)
+        table_name <- paste0(string1, xvar, " through ", mediator, string2, "\n")
+      }
       temp_result <- print.result(list_with_results = intermediate_results[[mediator]]$individual_indirect,
                                   final_results = final_results, 
-                                  extra_title = paste("Individual indirect effects of", xvar, "via", mediator, "\n"),
+                                  extra_title = table_name,
                                   list_name = "individual_indirect", extra_list_name = mediator,
                                   skip_n_last_cols = 6, return_table_index = T)
       final_results[["individual_indirect"]][[mediator]] <- temp_result[[1]]$individual_indirect[[mediator]]
@@ -593,7 +614,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     for (mediator in mediators){
       final_results <- print.result(list_with_results = intermediate_results[[mediator]]$m1_effects, 
                                     final_results = final_results, 
-                                    extra_title = paste0("Direct effects of ", mediator, "\n"),
                                     list_name = "m1_effects", extra_list_name = mediator,
                                     skip_n_last_cols = 3)
     }
@@ -604,7 +624,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     for (mediator in mediators){
       final_results <- print.result(list_with_results = intermediate_results[[mediator]]$m2_effects, 
                                     final_results = final_results, 
-                                    extra_title = paste("Direct effects of", xvar, "on", mediator, "\n"),
                                     list_name = "m2_effects", extra_list_name = mediator,
                                     skip_n_last_cols = 3)
     }
@@ -616,7 +635,6 @@ BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F
     for (mediator in mediators){
       temp_result <- print.result(list_with_results = intermediate_results[[mediator]]$indir_effects, 
                                   final_results = final_results, 
-                                  extra_title = paste("Indirect effects of", xvar, "via", mediator, "\n"),
                                   list_name = "indir_effects", extra_list_name = mediator,
                                   skip_n_last_cols = 3, return_table_index = T,
                                   print_effect_sizes = T)

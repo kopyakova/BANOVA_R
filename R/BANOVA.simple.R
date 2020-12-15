@@ -393,7 +393,6 @@ BANOVA.simple <- function(BANOVA_output = "NA", base = NULL, quantiles = c(0.025
       #intercept and the levels of the base variable should not be included in the simple effects
       effect_matrix[, intercept_name]    <- 0
       effect_matrix[, base_levels_names] <- 0
-      
       coef_temp      <- coefficients[, colnames(effect_matrix)] #coefficients of relevant regressors
 
       if(return_posterior_samples){
