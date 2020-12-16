@@ -26,6 +26,8 @@ return_posterior_samples = F,  multi_samples_beta1_raw_m = NULL)
   \item{x}{a BANOVA.mediation object}
 
   \item{\dots}{additional arguments, currently ignored}
+  
+  \item{multi_samples_beta1_raw_m}{argument for an internal use in the package. Please do not change.}
 }
 
 \details{

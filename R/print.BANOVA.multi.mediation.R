@@ -25,7 +25,7 @@ print.BANOVA.multi.mediation <-
           counter <- counter + 1
         }
       } else {
-        if (!is.null(additional_title)) cat(additional_title[i])  
+        if (!is.null(additional_title)) cat(additional_title)  
         print.list.elements(list_with_effects, list_with_effect_sizes)
       }
     }
@@ -48,12 +48,7 @@ print.BANOVA.multi.mediation <-
       cat(paste("Total individual indirect effects of the causal variable", xvar, 
                 "on the outcome variables\n\n"))
       print.effects(x$total_indir_effects)
-      
-      # #Report total effects of the causal variable
-      # cat(paste(strrep("-", 100), '\n'))
-      # cat(paste("Total individual effects of the causal variable", xvar, 
-      #           "on the outcome variables\n\n"))
-      # print.effects(x$total_effects)
+  
       options(max.print=save_options)
     }else{
       #Report direct effects of the causal variable on the outcome

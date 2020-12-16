@@ -109,7 +109,7 @@ colorad$blur_squared <- (colorad$blur)^2
 dv <- cbind(colorad$blur, colorad$blur_squared)
 colnames(dv) <- c("blur", "blur_squared")
 colorad$dv <- dv
-# Build and analyze the model for the dependent variableы
+# Build and analyze the model for the dependent variables
 model <- BANOVA.model('multiNormal')
 banova_multi_norm_model <- BANOVA.build(model)
 res_2 <- BANOVA.run(dv ~ typic, ~ color, fit = banova_multi_norm_model,
