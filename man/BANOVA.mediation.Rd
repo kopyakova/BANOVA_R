@@ -6,19 +6,22 @@
 \code{BANOVA.mediation} conducts mediation and moderated mediation analysis based on various BANOVA models with a single mediator and a casual variable. 
 }
 \usage{
-BANOVA.mediation(sol_1, sol_2, xvar, mediator, individual = F)
+BANOVA.mediation(sol_1, sol_2, xvar, mediator, individual = F, 
+return_posterior_samples = F,  multi_samples_beta1_raw_m = NULL)
 \method{print}{BANOVA.mediation}(x, ...)
 }
 \arguments{
-  \item{sol_1}{an  object  of  class  "BANOVA"  returned  by  BANOVA.run  function with  a fitted model for an outcome variable regressed on a causal variable, a mediator, and, possibly, moderators and control variables. The outcome variable can follow Normal, T, Poisson, Bernoulli, Binomial, and ordered Multinomial distributions.}
+  \item{sol_1}{an  object  of  class  \code{"BANOVA"}  returned  by  BANOVA.run  function with  a fitted model for an outcome variable regressed on a causal variable, a mediator, and, possibly, moderators and control variables. The outcome variable can follow Normal, T, Poisson, Bernoulli, Binomial, and ordered Multinomial distributions.}
 
-  \item{sol_2}{an  object  of  class  "BANOVA"  returned  by  BANOVA.run  function with  a fitted model for a Normal outcome variable regressed on a causal variable, and, possibly, moderators and control variables.}
+  \item{sol_2}{an  object  of  class  \code{"BANOVA"} returned  by  BANOVA.run  function with  a fitted model for a Normal outcome variable regressed on a causal variable, and, possibly, moderators and control variables.}
 
   \item{xvar}{a character string which specifies the name of the causal variable used in both models.}
   
-  \item{mediator}{a character string which specifies the name of the mediator variable used in the models.}
+  \item{mediator}{a character string which specifies the name of the mediator variable used in the model.}
   
   \item{individual}{logical  indicator  of  whether to output effects for individual units in the analysis (TRUE or FALSE). This analysis requires a multilevel \code{sol_1}.}
+  
+   \item{return_posterior_samples}{logical indicator of whether posterior samples of mediated effects should be returned (TRUE or FALSE).}
   
   \item{x}{a BANOVA.mediation object}
 
@@ -30,7 +33,7 @@ This function conducts a correlational mediation and moderated mediation analysi
 
 When the algorithm is calculating the effects of a given causal variable it first identifies all moderators which are interacting with the investigated variable. Based on each interaction, moderated coefficients are computed and summarized in a table. If the causal variable is a part of an interaction term with three or more variables, separate results are computed for each of the moderators and all of their possible combinations. This results in multiple tables with the effects. If a continuous variable is involved in the interaction the effects are evaluated at its mean value, which is zero by default. This is equivalent to omitting the continuous variable from the interaction. 
 
-The function combines the effects of the mediator on the dependent variable with the effect of the causal variable on the mediator in a multiplicative manner to obtain the indirect effect of the treatment. If multiple tables with moderated effects of the mediator or the causal variable on mediator are obtained in the previous steps of the analysis, the indirect effects are computed for each combination of these tables. 
+The function combines the effects of the mediator on the dependent variable with the effect of the causal variable on the mediator in a multiplicative manner to obtain the indirect effect of the treatment. If multiple tables with moderated effects of the mediator or the causal variable on mediator are obtained in the previous steps of the analysis, the indirect effects are computed for each combination of these table. 
 
 For models with a Normal outcome variable, it is possible to interpret the effects as causal by explicitly encoding the causal variable with dummy coding and including an interaction between the causal and mediating variables in the model. For further details, see the publication of MacKinnon et al. (2020).
 }
@@ -58,15 +61,14 @@ Ying, Y. and MacKinnon, D.P. (2009) \emph{Bayesian Mediation Analysis}, Psycholo
 
 Zhao, X., John G.L., and Chen, Q. (2010) \emph{Reconsidering Baron and Kenny: Myths and Truths About Mediation Analysis}, Journal of Consumer Research, Vol.37, No.2, pp. 197-206.
 
-Wedel, M., and Dong, C. (2019) \emph{BANOVA: Bayesian Analysis of Variance for Consumer Research}, Journal of Consumer Psychology, Vol. 30, No. 1, pp. 3–23.
+Wedel, M., and Dong, C. (2019) \emph{BANOVA: Bayesian Analysis of Variance for Consumer Research}, Journal of Consumer Psychology, Vol. 30, No. 1, pp. 3-23.
 
-MacKinnon, D.P., Valente,  M.J., and Gonzalez, O. (2020) \emph{The correspondence between causal and traditional mediation analysis: the link is the mediator by treatment interaction}, Prevention Science,  Vol. 21, No. 2, pp. 147–157
+MacKinnon, D.P., Valente,  M.J., and Gonzalez, O. (2020) \emph{The correspondence between causal and traditional mediation analysis: the link is the mediator by treatment interaction}, Prevention Science,  Vol. 21, No. 2, pp. 147-157.
 }
 
 \examples{
 data(condstudy_sub)
 \donttest{
-library(rstan)
 # use BANOVA.run based on 'Stan'
 model <- BANOVA.model('Normal')
 banova_model <- BANOVA.build(model)
@@ -79,6 +81,5 @@ sol <- BANOVA.mediation(res_1, res_2, xvar='cond', mediator='pict')
 print(sol)
 print(sol$dir_effects)
 }
-
 }
 

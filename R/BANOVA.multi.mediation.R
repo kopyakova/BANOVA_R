@@ -77,7 +77,7 @@
 
 #results <- BANOVA.multi.mediation(res_1, res_2, xvar='typic', mediators=c("blur", "blur_squared"))
                               
-BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = F){
+BANOVA.multi.mediation <- function(sol_1, sol_2, xvar, mediators, individual = FALSE){
   #adapts the design matrix of a multivariate sol_2 to work with BANOVA.mediaation
   adapt.design.matrix <- function(dMatrice, mediator){
     d_temp <- dMatrice

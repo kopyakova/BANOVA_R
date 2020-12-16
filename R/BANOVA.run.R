@@ -1,5 +1,4 @@
 #' run a BANOVA model
-#' @param 
 #'
 #' @return A BANOVA stan model.
 #'

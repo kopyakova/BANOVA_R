@@ -144,7 +144,7 @@ function (sol_1, est_matrix, n_sample, mediator, xvar = NA){
       attr(l1_matrix, "levels") <- l1_matrix
     }else{
       form <- formula(attr(sol_1$mf1, 'terms'))
-      newform <- update(form, NULL ~ .)
+      newform <- stats::update(form, NULL ~ .)
       l1_matrix <- effect.matrix.mediator(interaction_factors = l1_values, matrix_formula=newform, xvar=xvar, contrast = sol_1$contrast)
     }
     if (length(mediator_interaction_list) > 0){

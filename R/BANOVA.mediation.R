@@ -4,6 +4,7 @@
 BANOVA.mediation <-
   function(sol_1, sol_2, xvar, mediator, individual = F, return_posterior_samples = F, 
            multi_samples_beta1_raw_m = NULL){
+    #Function which prepares labels for the results returened to the user
     prepare_list_name <- function(moderated_var, table_colnames){
       #check if there are factors at other levels
       n_col <- length(table_colnames)

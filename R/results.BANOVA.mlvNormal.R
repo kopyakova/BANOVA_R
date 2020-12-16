@@ -1,17 +1,16 @@
 results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_level = F){
-  
   # This function combines tables for the multivariate (normal) models. The results for multivariate 
   # models are first obtained for each individual dependent variable (in a for loop) and then is 
   # combined in this function.
-  # @param list_with_tables list with tables to be combined. Each element in the list is expected 
+  # Param: list_with_tables list with tables to be combined. Each element in the list is expected 
   # to have a name of the corresponding dependent variabel (for example "y1", "y2", etc). 
   # list_with_tables[["y1"]] is expected to have one or more elemnts which are matrices or data frames
-  # @param list_names_first logical. If TRUE the rownames of tables have the names of dependent 
+  # Param: list_names_first logical. If TRUE the rownames of tables have the names of dependent 
   # variables first, followed by default rownames (for example "y1 (Intercept)"). 
-  #' If FLASE default rownames are followed by variable names  (for example "(Intercept) y1")
-  # @param list_elements_length numeric. how many elemnts are in each list (must be the same for all dep vars)
-  # @param anova logical. Used to assign a class of the tables
-  # @param conv logical. Used to assign a class of the tables
+  # If FLASE default rownames are followed by variable names  (for example "(Intercept) y1")
+  # Param: list_elements_length numeric. how many elemnts are in each list (must be the same for all dep vars)
+  # Param: anova logical. Used to assign a class of the tables
+  # Param: conv logical. Used to assign a class of the tables
   combine.tables <- function(list_with_tables, list_names_first = T, list_elements_length = 1,
                                        anova = F, conv = F){
     combine <- function(list_with_tables, element_name = "NA"){
@@ -225,7 +224,7 @@ results.BANOVA.mlvNormal <- function(fit_beta, dep_var_names, dMatrice, single_l
       # Result tables for of the l_th dependent variable
       anova.tables.list[[dep_var_name]] <- table.ANCOVA(samples_l2_param, Z, X, samples_l1_param, 
                                                          y_val = array(y[,l], dim = c(length(y[,l]), 1)), 
-                                                         model = model_name)
+                                                         model = 'Normal')
         
       coef.tables.list[[dep_var_name]]  <- table.coefficients(samples_l1_param, beta1_names, 
                                                               Z_names, X_names, attr(Z, 'assign') + 1, 
