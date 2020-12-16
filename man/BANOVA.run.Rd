@@ -26,11 +26,11 @@ num_trials = 1, contrast = NULL, y_lowerBound = -Inf, y_upperBound = Inf, ...)
   
   \item{model_name}{a character string in c('Normal', 'T', 'Bernoulli', 'Binomial', 'Poisson', 'ordMultinomial', 'Multinomial', 'multiNormal', 'truncNormal')}
 
-  \item{dataX}{a list of data frames(each corresponds to the choice set of each observation) that includes all covariates and factors, for the Multinomial model only, default NULL}
+  \item{dataX}{a list of data frames (each corresponds to the choice set of each observation) that includes all covariates and factors, for the Multinomial model only, default NULL}
   
-  \item{dataZ}{a data frame(long format) that includes all level 2 covariates and factors, for the Multinomial model only, default NULL}
+  \item{dataZ}{a data frame (long format) that includes all level 2 covariates and factors, for the Multinomial model only, default NULL}
   
-  \item{data}{a data.frame in a long format including all features in level 1 and level 2(covariates and categorical factors) and responses, default NULL. For the Multivariate Normal model the data must be specially prepared: first, combine the set of dependent variables in a single matrix; next, add this matrix to an original data frame used in the analysis. For an example of the specification of the data, please, see below.}
+  \item{data}{a data.frame in a long format including all features in level 1 and level 2 (covariates and categorical factors) and responses, default NULL. For the Multivariate Normal model the data must be specially prepared: first, combine the set of dependent variables in a single matrix; next, add this matrix to an original data frame used in the analysis. For an example of the specification of the data, please, see below.}
 
   \item{id}{subject ID (string) of each response unit}
   
