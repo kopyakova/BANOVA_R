@@ -2,3 +2,6 @@
 .DS_Store
 .Rproj.user
 BANOVA_R.Rproj
+.RData
+.Rhistory
+^.*\.RData$

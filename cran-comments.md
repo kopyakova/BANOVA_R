@@ -1,7 +1,9 @@
 ## Resubmission
 This is a resubmission. In this version I have:
-* Added BANOVA.simple, a simple effects calculation for moderated variables
-* Fixed some small bugs
+* Added BANOVA.multi.mediation, a function for mediation analysis with multiple mediators
+* Added models for analysis of Multivariate Normal and Truncated Normal dependent variables
+* Fixed a bug in BANOVA.mediation related to mediated moderation
+* Updated some help functions
 
 ## Test environments
 * local macOS Darwin 15.6.0 install, R 3.6.2
